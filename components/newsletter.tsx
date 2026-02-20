@@ -16,9 +16,9 @@ export const Newsletter = () => {
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 min-h-[44px] px-4 py-3 rounded-lg bg-background border border-border text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
             />
-            <Button className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
+            <Button className="min-h-[44px] px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium touch-manipulation">
               Subscribe
             </Button>
           </form>

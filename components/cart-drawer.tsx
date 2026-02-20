@@ -7,9 +7,15 @@ import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 export function CartDrawer() {
-  const { isOpen, closeCart, items, itemCount, updateQuantity, removeItem } = useCart()
+  const { isOpen, closeCart, items, itemCount, updateQuantity, removeItem, appliedPromo } = useCart()
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const discountAmount = appliedPromo
+    ? appliedPromo.discount_type === 'percent'
+      ? Math.round(subtotal * (appliedPromo.discount_value / 100))
+      : Math.min(appliedPromo.discount_value, subtotal)
+    : 0
+  const total = Math.max(0, subtotal - discountAmount)
 
   if (!isOpen) return null
 
@@ -37,7 +43,7 @@ export function CartDrawer() {
           <button
             type="button"
             onClick={closeCart}
-            className="p-2 hover:bg-secondary rounded-lg transition-colors"
+            className="p-2.5 min-w-[44px] min-h-[44px] hover:bg-secondary rounded-lg transition-colors touch-manipulation flex items-center justify-center"
             aria-label="Close cart"
           >
             <X size={22} className="text-foreground" />
@@ -70,31 +76,31 @@ export function CartDrawer() {
                     <p className="text-base font-bold text-foreground mt-0.5">
                       {formatPrice(item.price * item.quantity)}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex items-center gap-1 mt-1">
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.id, -1)}
-                        className="p-1.5 hover:bg-secondary rounded"
+                        onClick={() => updateQuantity(`${item.id}-${item.size}-${item.color}`, -1)}
+                        className="min-w-[44px] min-h-[44px] p-2 hover:bg-secondary rounded flex items-center justify-center touch-manipulation"
                         aria-label="Decrease quantity"
                       >
-                        <Minus size={16} />
+                        <Minus size={18} />
                       </button>
-                      <span className="w-6 text-center text-base font-medium">{item.quantity}</span>
+                      <span className="w-8 text-center text-base font-medium">{item.quantity}</span>
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.id, 1)}
-                        className="p-1.5 hover:bg-secondary rounded"
+                        onClick={() => updateQuantity(`${item.id}-${item.size}-${item.color}`, 1)}
+                        className="min-w-[44px] min-h-[44px] p-2 hover:bg-secondary rounded flex items-center justify-center touch-manipulation"
                         aria-label="Increase quantity"
                       >
-                        <Plus size={16} />
+                        <Plus size={18} />
                       </button>
                       <button
                         type="button"
-                        onClick={() => removeItem(item.id)}
-                        className="p-1.5 hover:bg-destructive/10 text-destructive rounded ml-1"
+                        onClick={() => removeItem(`${item.id}-${item.size}-${item.color}`)}
+                        className="min-w-[44px] min-h-[44px] p-2 hover:bg-destructive/10 text-destructive rounded flex items-center justify-center touch-manipulation ml-1"
                         aria-label="Remove item"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </div>
@@ -110,13 +116,23 @@ export function CartDrawer() {
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-semibold">{formatPrice(subtotal)}</span>
             </div>
+            {discountAmount > 0 && appliedPromo && (
+              <div className="flex justify-between text-base text-accent font-medium">
+                <span>Discount ({appliedPromo.code})</span>
+                <span>-{formatPrice(discountAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-base font-bold">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
             <Link href="/cart" onClick={closeCart} className="block">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full min-h-[44px] touch-manipulation">
                 View full cart
               </Button>
             </Link>
             <Link href="/checkout" onClick={closeCart} className="block">
-              <Button className="w-full">Checkout</Button>
+              <Button className="w-full min-h-[44px] touch-manipulation">Checkout</Button>
             </Link>
           </div>
         )}

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Facebook, Instagram, Twitter } from 'lucide-react'
+import { Facebook, Instagram, Music2 } from 'lucide-react'
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear()
@@ -20,25 +20,26 @@ export const Footer = () => {
           {/* Shop */}
           <div className="space-y-3 sm:space-y-4">
             <h4 className="font-semibold text-base sm:text-lg">Shop</h4>
-            <ul className="space-y-2 text-sm opacity-80">
+            <ul className="space-y-0 text-sm opacity-80">
               <li>
-                <Link href="/products" className="hover:opacity-100 transition-opacity">
+                <Link href="/products" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   All Products
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=shirts" className="hover:opacity-100 transition-opacity">
-                  Shirts
+                <Link href="/new-arrivals" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
+                  New Arrivals
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=pants" className="hover:opacity-100 transition-opacity">
-                  Pants
+                <Link href="/men" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
+                  Men
                 </Link>
               </li>
+              <li className="py-1.5 border-t border-primary-foreground/20 my-1.5" aria-hidden />
               <li>
-                <Link href="/products?category=dresses" className="hover:opacity-100 transition-opacity">
-                  Dresses
+                <Link href="/women" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
+                  Women
                 </Link>
               </li>
             </ul>
@@ -47,24 +48,24 @@ export const Footer = () => {
           {/* Company */}
           <div className="space-y-3 sm:space-y-4">
             <h4 className="font-semibold text-base sm:text-lg">Company</h4>
-            <ul className="space-y-2 text-sm opacity-80">
+            <ul className="space-y-0 text-sm opacity-80">
               <li>
-                <Link href="/about" className="hover:opacity-100 transition-opacity">
+                <Link href="/about" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:opacity-100 transition-opacity">
+                <Link href="/contact" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="hover:opacity-100 transition-opacity">
+                <Link href="/blog" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link href="/careers" className="hover:opacity-100 transition-opacity">
+                <Link href="/careers" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Careers
                 </Link>
               </li>
@@ -74,24 +75,24 @@ export const Footer = () => {
           {/* Legal */}
           <div className="space-y-3 sm:space-y-4">
             <h4 className="font-semibold text-base sm:text-lg">Legal</h4>
-            <ul className="space-y-2 text-sm opacity-80">
+            <ul className="space-y-0 text-sm opacity-80">
               <li>
-                <Link href="/privacy" className="hover:opacity-100 transition-opacity">
+                <Link href="/privacy" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:opacity-100 transition-opacity">
+                <Link href="/terms" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="hover:opacity-100 transition-opacity">
+                <Link href="/shipping" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Shipping Policy
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="hover:opacity-100 transition-opacity">
+                <Link href="/returns" className="block py-2.5 -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Return & Exchange Policy
                 </Link>
               </li>
@@ -109,15 +110,27 @@ export const Footer = () => {
           </p>
 
           {/* Social Links */}
-          <div className="flex items-center gap-6">
-            <a href="#" className="hover:opacity-100 transition-opacity opacity-80">
+          <div className="flex items-center gap-2">
+            <a
+              href="https://www.facebook.com/share/1P9EusG3E2/?mibextid=wwXIfr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 -m-2 hover:opacity-100 transition-opacity opacity-80 touch-manipulation"
+              aria-label="Facebook"
+            >
               <Facebook size={20} />
             </a>
-            <a href="#" className="hover:opacity-100 transition-opacity opacity-80">
+            <a
+              href="https://www.instagram.com/bixlay_clothing?igsh=MTF5MTh4cno4M3lo&utm_source=qr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 -m-2 hover:opacity-100 transition-opacity opacity-80 touch-manipulation"
+              aria-label="Instagram"
+            >
               <Instagram size={20} />
             </a>
-            <a href="#" className="hover:opacity-100 transition-opacity opacity-80">
-              <Twitter size={20} />
+            <a href="#" className="p-3 -m-2 hover:opacity-100 transition-opacity opacity-80 touch-manipulation" aria-label="TikTok" title="TikTok">
+              <Music2 size={20} />
             </a>
           </div>
         </div>

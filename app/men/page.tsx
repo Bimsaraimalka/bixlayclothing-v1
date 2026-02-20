@@ -30,7 +30,7 @@ export default function MenPage() {
 
             <div className="lg:col-span-3">
               <Suspense fallback={<div className="animate-pulse space-y-4" />}>
-                <ProductGrid />
+                <ProductGrid segment="Men" />
               </Suspense>
             </div>
           </div>

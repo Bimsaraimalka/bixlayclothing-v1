@@ -1,85 +1,97 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ShoppingCart, Share2, Check, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useCart } from '@/components/cart-context'
 import { formatPrice } from '@/lib/utils'
+import { useStoreProduct } from '@/hooks/use-store-products'
 
-const PRODUCT_DATA: Record<string, any> = {
-  '1': {
-    id: '1',
-    name: 'Classic T-Shirt',
-    price: 29.99,
-    category: 'Shirts',
-    colors: ['Black', 'White', 'Navy'],
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-    description: 'A timeless wardrobe staple. Our Classic T-Shirt is crafted from premium cotton for comfort and durability. Perfect for any occasion, dress it up or down with ease.',
-    details: [
-      '100% organic cotton',
-      'Pre-shrunk and colorfast',
-      'Comfortable crew neck',
-      'Versatile classic style',
-    ],
-    rating: 4.8,
-    reviews: 124,
-  },
-  '2': {
-    id: '2',
-    name: 'Denim Jeans',
-    price: 79.99,
-    category: 'Pants',
-    colors: ['Dark Blue', 'Light Blue'],
-    sizes: ['28', '30', '32', '34', '36'],
-    description: 'Premium denim jeans with the perfect fit. Made from high-quality denim fabric, these jeans offer both style and comfort for everyday wear.',
-    details: [
-      'Premium denim fabric',
-      'Perfect fit design',
-      'Durable stitching',
-      'Versatile styling options',
-    ],
-    rating: 4.9,
-    reviews: 256,
-  },
-  '3': {
-    id: '3',
-    name: 'Summer Dress',
-    price: 49.99,
-    category: 'Dresses',
-    colors: ['Pink', 'Yellow', 'Blue'],
-    sizes: ['XS', 'S', 'M', 'L'],
-    description: 'Light and breathable summer dress perfect for warm weather. This dress combines style and comfort for those hot days.',
-    details: [
-      'Lightweight breathable fabric',
-      'Perfect for summer',
-      'Versatile styling',
-      'Comfortable fit',
-    ],
-    rating: 4.7,
-    reviews: 98,
-  },
+const DEFAULT_DETAILS = [
+  'Premium materials',
+  'Comfortable fit',
+  'Quality craftsmanship',
+  'Versatile styling',
+]
+
+/** Map color name to CSS background (hex) for the color swatch dot. */
+const COLOR_SWATCH: Record<string, string> = {
+  black: '#1a1a1a',
+  white: '#f5f5f5',
+  navy: '#1e3a5f',
+  blue: '#2563eb',
+  'dark blue': '#1e3a5f',
+  'light blue': '#93c5fd',
+  gray: '#6b7280',
+  grey: '#6b7280',
+  red: '#dc2626',
+  pink: '#ec4899',
+  beige: '#d4b896',
+  cream: '#fef7ed',
+  brown: '#78350f',
+  green: '#16a34a',
+  olive: '#65743a',
+  yellow: '#eab308',
+  orange: '#ea580c',
+  purple: '#7c3aed',
+  lavender: '#c4b5fd',
+  mint: '#99f6e4',
+  burgundy: '#722f37',
+  charcoal: '#374151',
+  khaki: '#c3b091',
+  tan: '#d2b48c',
+}
+
+function getColorSwatchStyle(colorName: string): React.CSSProperties {
+  const key = colorName.trim().toLowerCase()
+  const hex = COLOR_SWATCH[key] ?? (key.startsWith('#') ? key : '#9ca3af')
+  return { backgroundColor: hex }
+}
+
+function getColorHex(colorName: string): string {
+  const key = colorName.trim().toLowerCase()
+  return COLOR_SWATCH[key] ?? (key.startsWith('#') ? key : '#9ca3af')
 }
 
 export function ProductDetail({ productId }: { productId: string }) {
   const pathname = usePathname()
-  const product = PRODUCT_DATA[productId] || PRODUCT_DATA['1']
-  const [selectedColor, setSelectedColor] = useState(product.colors[0])
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0])
+  const { addItem, openCart } = useCart()
+  const { product, loading, error } = useStoreProduct(productId)
+
+  const colors = product?.colors ?? []
+  const sizes = product?.sizes ?? []
+  const [selectedColor, setSelectedColor] = useState('')
+  const [selectedSize, setSelectedSize] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
-  // Multiple preview images (use real URLs when available)
-  const previewImages = [
-    '/hero-bixlay-models.png',
-    '/hero-bixlay-models.png',
-    '/hero-bixlay-models.png',
-  ]
+  useEffect(() => {
+    if (product) {
+      setSelectedColor(colors[0] ?? '')
+      setSelectedSize(sizes[0] ?? '')
+    }
+  }, [product, colors, sizes])
+
+  const displayImages =
+    product?.image_urls && product.image_urls.length > 0
+      ? product.image_urls
+      : ['/hero-bixlay-models.png']
 
   const handleAddToCart = () => {
+    if (!product) return
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: Number(product.price),
+      size: (selectedSize || sizes[0]) ?? '',
+      color: (selectedColor || colors[0]) ?? '',
+      quantity,
+    })
+    openCart()
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
   }
@@ -95,11 +107,31 @@ export function ProductDetail({ productId }: { productId: string }) {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <p className="text-muted-foreground">Loading product…</p>
+      </div>
+    )
+  }
+  if (error || !product) {
+    return (
+      <div className="space-y-4">
+        <p className="text-destructive">{error ?? 'Product not found.'}</p>
+        <Link href="/products" className="text-primary hover:underline">
+          Back to shop
+        </Link>
+      </div>
+    )
+  }
+
   const categorySlug = product.category.toLowerCase().replace(/\s+/g, '-')
+  const details =
+    product.details && product.details.length > 0 ? product.details : DEFAULT_DETAILS
+  const previewImages = displayImages
 
   return (
     <div>
-      {/* Breadcrumb - top right */}
       <nav className="flex justify-start mb-4 sm:mb-6" aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-1 text-xs sm:text-sm text-muted-foreground">
           <li>
@@ -129,9 +161,7 @@ export function ProductDetail({ productId }: { productId: string }) {
       </nav>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-12 lg:mb-16">
-        {/* Product images – main preview + thumbnail strip */}
         <div className="space-y-4">
-          {/* Main image */}
           <div className="relative w-full aspect-[4/3] max-h-[380px] sm:max-h-[420px] rounded-lg bg-muted overflow-hidden">
             <Image
               src={previewImages[selectedImageIndex]}
@@ -142,14 +172,13 @@ export function ProductDetail({ productId }: { productId: string }) {
               priority
             />
           </div>
-          {/* Thumbnail strip – click to change main image */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 pr-4">
             {previewImages.map((src, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => setSelectedImageIndex(index)}
-                className={`relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 min-w-[44px] min-h-[44px] rounded-lg overflow-hidden border-2 transition-all touch-manipulation ${
                   selectedImageIndex === index
                     ? 'border-primary ring-2 ring-primary ring-offset-2'
                     : 'border-border hover:border-primary'
@@ -168,88 +197,99 @@ export function ProductDetail({ productId }: { productId: string }) {
           </div>
         </div>
 
-        {/* Product Info */}
         <div className="space-y-4 sm:space-y-5">
-          {/* Header */}
           <div className="space-y-2 sm:space-y-4">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-primary">{product.name}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium">Product ID: {product.id}</p>
             <p className="text-lg sm:text-xl font-bold text-foreground">{formatPrice(product.price)}</p>
           </div>
 
-          {/* Color Selection */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-foreground">
-              Color
-            </label>
-            <div className="flex gap-1.5 sm:gap-2">
-              {product.colors.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setSelectedColor(color)}
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${
-                    selectedColor === color
-                      ? 'border-primary ring-2 ring-primary ring-offset-1'
-                      : 'border-border hover:border-primary'
-                  }`}
-                  title={color}
-                />
-              ))}
+          {colors.length > 0 && (
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-foreground">
+                Color: <span style={{ color: getColorHex((selectedColor || colors[0]) ?? '') }}>{(selectedColor || colors[0]) ?? ''}</span>
+              </label>
+              <div className="flex gap-1.5 sm:gap-2">
+                {colors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setSelectedColor(color)}
+                    style={getColorSwatchStyle(color)}
+                    className={`w-8 h-8 sm:w-9 sm:h-9 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all shrink-0 touch-manipulation flex items-center justify-center ${
+                      selectedColor === color
+                        ? 'ring-2 ring-primary ring-offset-1 border-primary'
+                        : 'border-border hover:border-primary'
+                    }`}
+                    title={color}
+                    aria-label={`Color ${color}`}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Size Selection */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-foreground">
-              Size: <span className="text-accent">{selectedSize}</span>
-            </label>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={`py-1.5 sm:py-2 px-2.5 min-w-0 max-w-[3.5rem] rounded-lg border-2 font-medium transition-all text-center text-xs sm:text-sm ${
-                    selectedSize === size
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border hover:border-primary'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
+          {sizes.length > 0 && (
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-foreground">
+                Size: <span className="text-accent">{selectedSize || sizes[0]}</span>
+              </label>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {sizes.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setSelectedSize(size)}
+                    className={`py-2 sm:py-2.5 px-3 min-h-[44px] min-w-[44px] rounded-lg border-2 font-medium transition-all text-center text-xs sm:text-sm touch-manipulation ${
+                      selectedSize === size
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border hover:border-primary'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Quantity */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-foreground">Quantity</label>
             <div className="flex items-center gap-2 sm:gap-3">
               <button
+                type="button"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="px-2.5 sm:px-3 py-1.5 border border-border rounded-lg hover:bg-secondary transition-colors min-w-[2rem] text-sm"
+                className="min-w-[44px] min-h-[44px] px-3 py-2 border border-border rounded-lg hover:bg-secondary transition-colors text-sm touch-manipulation flex items-center justify-center"
+                aria-label="Decrease quantity"
               >
                 −
               </button>
-              <span className="text-sm sm:text-base font-bold w-6 text-center">{quantity}</span>
+              <span className="text-sm sm:text-base font-bold w-8 text-center">{quantity}</span>
               <button
+                type="button"
                 onClick={() => setQuantity(quantity + 1)}
-                className="px-2.5 sm:px-3 py-1.5 border border-border rounded-lg hover:bg-secondary transition-colors min-w-[2rem] text-sm"
+                className="min-w-[44px] min-h-[44px] px-3 py-2 border border-border rounded-lg hover:bg-secondary transition-colors text-sm touch-manipulation flex items-center justify-center"
+                aria-label="Increase quantity"
               >
                 +
               </button>
             </div>
           </div>
 
-          {/* Add to Cart Button */}
           <div className="flex gap-2 sm:gap-3">
             <button
+              type="button"
               onClick={handleAddToCart}
-              className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all flex items-center justify-center gap-1.5 text-xs sm:text-sm"
+              disabled={product.stock < 1}
+              className="flex-1 min-h-[48px] py-3 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all flex items-center justify-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
             >
               {isAdded ? (
                 <>
                   <Check size={16} />
                   Added to Cart
                 </>
+              ) : product.stock < 1 ? (
+                'Out of stock'
               ) : (
                 <>
                   <ShoppingCart size={16} />
@@ -258,8 +298,9 @@ export function ProductDetail({ productId }: { productId: string }) {
               )}
             </button>
             <button
+              type="button"
               onClick={handleCopyLink}
-              className="p-2.5 sm:p-3 rounded-lg border border-border hover:bg-secondary transition-colors relative shrink-0"
+              className="min-w-[48px] min-h-[48px] p-3 rounded-lg border border-border hover:bg-secondary transition-colors relative shrink-0 touch-manipulation flex items-center justify-center"
               title="Copy link"
               aria-label="Copy link"
             >
@@ -272,11 +313,10 @@ export function ProductDetail({ productId }: { productId: string }) {
             </button>
           </div>
 
-          {/* Product Details */}
           <div className="border-t border-border pt-4 sm:pt-5">
             <h3 className="font-semibold text-foreground mb-2 sm:mb-3 text-xs sm:text-sm">Product Details</h3>
             <ul className="space-y-1.5">
-              {product.details.map((detail: string, i: number) => (
+              {details.map((detail, i) => (
                 <li key={i} className="flex items-center gap-1.5 text-foreground/80 text-xs sm:text-sm">
                   <span className="w-1.5 h-1.5 bg-accent rounded-full shrink-0" />
                   {detail}
@@ -285,7 +325,6 @@ export function ProductDetail({ productId }: { productId: string }) {
             </ul>
           </div>
 
-          {/* Shipping & Returns */}
           <div className="space-y-2 border-t border-border pt-4 sm:pt-5">
             <div className="flex items-start gap-2">
               <span className="text-accent text-sm">✓</span>

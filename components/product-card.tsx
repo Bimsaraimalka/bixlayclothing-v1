@@ -12,6 +12,8 @@ export type ProductCardProduct = {
   priceMax?: number
   /** When set, show original price crossed out and current price (e.g. was 4500, now 3000) */
   originalPrice?: number
+  /** First product image URL; when set, shown on the card instead of placeholder */
+  imageUrl?: string
   isNew?: boolean
   soldOut?: boolean
   topSelling?: boolean
@@ -27,6 +29,10 @@ export function ProductCard({ product }: ProductCardProps) {
     hasSinglePrice &&
     product.originalPrice != null &&
     product.originalPrice > (product.price ?? 0)
+  const discountPercent =
+    showBeforeNow && product.originalPrice! > 0
+      ? Math.round((1 - (product.price! / product.originalPrice!)) * 100)
+      : 0
   const priceLabel = hasSinglePrice
     ? formatPrice(product.price!)
     : formatPrice(product.priceMin!)
@@ -35,10 +41,21 @@ export function ProductCard({ product }: ProductCardProps) {
     <div className="group bg-card rounded-lg border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       <Link href={`/products/${product.id}`} className="block">
         {/* Image area with badges */}
-        <div className="relative aspect-square bg-muted">
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
-            Image
-          </div>
+        <div className="relative aspect-square bg-muted overflow-hidden">
+          {product.imageUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={product.imageUrl}
+              alt=""
+              className="w-full h-full object-cover"
+              width={400}
+              height={400}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
+              Image
+            </div>
+          )}
           {product.isNew && (
             <span className="absolute top-4 left-4 flex h-8 min-w-[2rem] items-center justify-center rounded-[10px] bg-primary text-primary-foreground text-xs font-medium uppercase px-2.5 py-1.5">
               New
@@ -52,6 +69,11 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.topSelling && (
             <span className="absolute top-4 right-4 flex h-8 min-w-[4.5rem] items-center justify-center rounded-[10px] bg-accent text-white text-xs font-medium uppercase px-3 py-1.5">
               Top Selling
+            </span>
+          )}
+          {discountPercent > 0 && (
+            <span className="absolute bottom-4 right-4 flex h-8 min-w-[2.5rem] items-center justify-center rounded-[10px] bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1.5">
+              -{discountPercent}%
             </span>
           )}
         </div>
