@@ -8,6 +8,7 @@ const STATIC_ROUTES = [
   '/products',
   '/men',
   '/women',
+  '/unisex',
   '/new-arrivals',
   '/cart',
   '/checkout',

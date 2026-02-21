@@ -19,7 +19,13 @@ const SETTINGS_SUB_ITEMS = [
   { href: '/admin/settings/categories', label: 'Categories' },
 ]
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
+type AdminLayoutProps = {
+  children: React.ReactNode
+  /** When true, main content spans full width (no max-w constraint) */
+  fullWidth?: boolean
+}
+
+export function AdminLayout({ children, fullWidth }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
@@ -195,7 +201,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-auto p-4 sm:p-6">
-          <div className="max-w-6xl mx-auto">
+          <div className={fullWidth ? 'w-full' : 'max-w-6xl mx-auto'}>
             {children}
           </div>
         </main>

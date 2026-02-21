@@ -1,10 +1,17 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ProductCard } from '@/components/product-card'
 import type { ProductCardProduct } from '@/components/product-card'
 import { useStoreProducts } from '@/hooks/use-store-products'
 import { LoadingScreen } from '@/components/loading-screen'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from '@/components/ui/carousel'
 
 function toCardProduct(p: {
   id: string
@@ -35,10 +42,34 @@ function toCardProduct(p: {
   }
 }
 
+const MIN_SLIDES_FOR_CAROUSEL = 8
+
+function repeatToMinLength<T>(arr: T[], min: number): T[] {
+  if (arr.length >= min) return arr
+  const result: T[] = []
+  while (result.length < min) {
+    for (const item of arr) {
+      result.push(item)
+      if (result.length >= min) break
+    }
+  }
+  return result
+}
+
 export const FeaturedProducts = () => {
   const { products, loading, error } = useStoreProducts()
   const newArrivals = products.filter((p) => p.new_arrival === true).slice(0, 8)
   const cardProducts = newArrivals.map(toCardProduct)
+  const displayProducts = repeatToMinLength(cardProducts, MIN_SLIDES_FOR_CAROUSEL)
+  const [api, setApi] = useState<CarouselApi>()
+
+  useEffect(() => {
+    if (!api || displayProducts.length <= 1) return
+    const timer = setInterval(() => {
+      api.scrollNext()
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [api, displayProducts.length])
 
   return (
     <section className="w-full py-12 sm:py-16 lg:py-20 bg-white">
@@ -58,11 +89,22 @@ export const FeaturedProducts = () => {
           <p className="text-center py-12 text-destructive text-sm">{error}</p>
         ) : cardProducts.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {cardProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <Carousel
+              opts={{ loop: true, align: 'start', draggable: true, dragFree: false }}
+              setApi={setApi}
+              className="w-full cursor-grab active:cursor-grabbing"
+            >
+              <CarouselContent className="-ml-4">
+                {displayProducts.map((product, index) => (
+                  <CarouselItem
+                    key={`${product.id}-${index}`}
+                    className="pl-4 basis-[45%] sm:basis-1/3 lg:basis-1/5"
+                  >
+                    <ProductCard product={product} size="compact" />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
             <div className="text-center mt-10 sm:mt-14">
               <Link
                 href="/new-arrivals"

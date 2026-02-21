@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { X, Trash2, Plus, Minus } from 'lucide-react'
 import { useCart } from '@/components/cart-context'
 import { formatPrice } from '@/lib/utils'
@@ -77,8 +78,20 @@ export function CartDrawer() {
                   key={`${item.id}-${item.size}-${item.color}`}
                   className="flex gap-3 border-b border-border pb-3 last:border-0"
                 >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded bg-muted flex items-center justify-center flex-shrink-0 text-muted-foreground text-xs sm:text-sm">
-                    Image
+                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded bg-muted flex-shrink-0 overflow-hidden">
+                    {item.imageUrl ? (
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs sm:text-sm">
+                        Image
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-foreground text-base truncate">{item.name}</p>
@@ -144,7 +157,7 @@ export function CartDrawer() {
               </Button>
             </Link>
             <Link href="/checkout" onClick={closeCart} className="block">
-              <Button className="w-full min-h-[44px] touch-manipulation">Checkout</Button>
+              <Button className="w-full min-h-[44px] touch-manipulation bg-primary text-primary-foreground hover:bg-primary/90">Checkout</Button>
             </Link>
           </div>
         )}

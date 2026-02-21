@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Trash2, Plus, Minus, Tag, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -91,12 +92,24 @@ export function CartContent() {
                 key={`${item.id}-${item.size}-${item.color}`}
                 className="flex gap-3 sm:gap-4 border border-border rounded-lg p-3 sm:p-4 bg-background"
               >
-                {/* Item Image Placeholder */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                  <div className="text-center text-muted-foreground text-sm">
-                    <p>Product</p>
-                    <p>Image</p>
-                  </div>
+                {/* Item Image */}
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-center text-muted-foreground text-sm">
+                      <div>
+                        <p>Product</p>
+                        <p>Image</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Item Details */}

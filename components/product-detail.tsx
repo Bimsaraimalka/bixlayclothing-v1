@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { ShoppingCart, Share2, Check, ChevronRight } from 'lucide-react'
+import { ShoppingCart, Share2, Check, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useCart } from '@/components/cart-context'
 import { formatPrice } from '@/lib/utils'
 import { useStoreProduct } from '@/hooks/use-store-products'
@@ -67,7 +67,7 @@ export function ProductDetail({ productId }: { productId: string }) {
   const [selectedSize, setSelectedSize] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
-  const [shareCopied, setShareCopied] = useState(false)
+  const [shareFeedback, setShareFeedback] = useState<'copied' | 'shared' | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   useEffect(() => {
@@ -91,20 +91,30 @@ export function ProductDetail({ productId }: { productId: string }) {
       size: (selectedSize || sizes[0]) ?? '',
       color: (selectedColor || colors[0]) ?? '',
       quantity,
+      imageUrl: displayImages[0],
     })
     openCart()
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
   }
 
-  const handleCopyLink = async () => {
+  const handleShare = async () => {
     const url = typeof window !== 'undefined' ? `${window.location.origin}${pathname}` : ''
     try {
-      await navigator.clipboard.writeText(url)
-      setShareCopied(true)
-      setTimeout(() => setShareCopied(false), 2000)
+      if (typeof navigator.share === 'function') {
+        await navigator.share({
+          url,
+          title: product?.name ?? 'Product',
+          text: product?.name ?? 'Check out this product',
+        })
+        setShareFeedback('shared')
+      } else {
+        await navigator.clipboard.writeText(url)
+        setShareFeedback('copied')
+      }
+      setTimeout(() => setShareFeedback(null), 2000)
     } catch {
-      setShareCopied(false)
+      setShareFeedback(null)
     }
   }
 
@@ -168,6 +178,26 @@ export function ProductDetail({ productId }: { productId: string }) {
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
             />
+            {previewImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSelectedImageIndex((i) => (i === 0 ? previewImages.length - 1 : i - 1))}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 size-10 rounded-full bg-background/90 hover:bg-background shadow-md border border-border flex items-center justify-center text-foreground transition-colors touch-manipulation z-10"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedImageIndex((i) => (i === previewImages.length - 1 ? 0 : i + 1))}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 size-10 rounded-full bg-background/90 hover:bg-background shadow-md border border-border flex items-center justify-center text-foreground transition-colors touch-manipulation z-10"
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
           </div>
           <div className="flex gap-2 overflow-x-auto pt-2 pb-2 px-2 -mx-2">
             {previewImages.map((src, index) => (
@@ -195,7 +225,7 @@ export function ProductDetail({ productId }: { productId: string }) {
         </div>
 
         <div className="space-y-4 sm:space-y-5">
-          <div className="space-y-2 sm:space-y-4">
+          <div className="space-y-2">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-primary">{product.name}</h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-medium">Product ID: {product.id}</p>
             <p className="text-lg sm:text-xl font-bold text-foreground">{formatPrice(product.price)}</p>
@@ -204,7 +234,7 @@ export function ProductDetail({ productId }: { productId: string }) {
           {colors.length > 0 && (
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-foreground">
-                Color: <span style={{ color: getColorHex((selectedColor || colors[0]) ?? '') }}>{(selectedColor || colors[0]) ?? ''}</span>
+                Color: <span className="text-muted-foreground">{(selectedColor || colors[0]) ?? ''}</span>
               </label>
               <div className="flex gap-1.5 sm:gap-2">
                 {colors.map((color) => (
@@ -278,7 +308,7 @@ export function ProductDetail({ productId }: { productId: string }) {
               type="button"
               onClick={handleAddToCart}
               disabled={product.stock < 1}
-              className="flex-1 min-h-[48px] py-3 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all flex items-center justify-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+              className="flex-1 min-h-[48px] py-3 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold transition-all flex items-center justify-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
             >
               {isAdded ? (
                 <>
@@ -296,22 +326,22 @@ export function ProductDetail({ productId }: { productId: string }) {
             </button>
             <button
               type="button"
-              onClick={handleCopyLink}
+              onClick={handleShare}
               className="min-w-[48px] min-h-[48px] p-3 rounded-lg border border-border hover:bg-secondary transition-colors relative shrink-0 touch-manipulation flex items-center justify-center"
-              title="Copy link"
-              aria-label="Copy link"
+              title="Copy link to share"
+              aria-label="Copy link to share"
             >
               <Share2 size={16} className="text-primary" />
-              {shareCopied && (
+              {shareFeedback && (
                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-foreground text-background text-xs rounded whitespace-nowrap">
-                  Link copied
+                  {shareFeedback === 'shared' ? 'Shared' : 'Link copied'}
                 </span>
               )}
             </button>
           </div>
 
           <div className="border-t border-border pt-4 sm:pt-5">
-            <h3 className="font-semibold text-foreground mb-2 sm:mb-3 text-xs sm:text-sm">Product Details</h3>
+            <h3 className="font-semibold text-foreground mb-2 text-xs sm:text-sm">Product Details</h3>
             <ul className="space-y-1.5">
               {details.map((detail, i) => (
                 <li key={i} className="flex items-center gap-1.5 text-foreground/80 text-xs sm:text-sm">

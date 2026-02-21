@@ -545,35 +545,37 @@ export function AdminOrders() {
         <p className="text-sm text-muted-foreground mt-1">View sent orders, returns, and orders in queue</p>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <input
           type="text"
           placeholder="Search by order ID or customer..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-0 min-h-[44px] px-4 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base sm:text-sm touch-manipulation"
+          className="w-full min-h-[44px] px-4 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base sm:text-sm touch-manipulation sm:flex-1 sm:min-w-0"
         />
-        <Button
-          type="button"
-          className="min-h-[44px] gap-2 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={() => {
-            setAddForm(emptyAddOrderForm())
-            setAddError('')
-            setAddOpen(true)
-          }}
-        >
-          <Plus size={18} />
-          Add order
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="min-h-[44px] gap-2 shrink-0"
-          onClick={handleDownloadOrdersCsv}
-        >
-          <Download size={18} />
-          Download CSV
-        </Button>
+        <div className="flex gap-3 sm:shrink-0">
+          <Button
+            type="button"
+            className="min-h-[44px] gap-2 flex-1 sm:flex-initial bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => {
+              setAddForm(emptyAddOrderForm())
+              setAddError('')
+              setAddOpen(true)
+            }}
+          >
+            <Plus size={18} />
+            Add order
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-[44px] gap-2 flex-1 sm:flex-initial"
+            onClick={handleDownloadOrdersCsv}
+          >
+            <Download size={18} />
+            Download CSV
+          </Button>
+        </div>
       </div>
 
       {/* Add order dialog */}

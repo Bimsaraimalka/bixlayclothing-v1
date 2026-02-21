@@ -3,7 +3,7 @@ import { AdminProducts } from '@/components/admin/admin-products'
 
 export default function AdminProductsPage() {
   return (
-    <AdminLayout>
+    <AdminLayout fullWidth>
       <AdminProducts />
     </AdminLayout>
   )

@@ -70,6 +70,17 @@ export const Header = () => {
     }
   }, [searchOpen])
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const el = mobileMenuRef.current
+      if (el?.hasAttribute('open') && !el.contains(e.target as Node)) {
+        el.removeAttribute('open')
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -210,13 +221,13 @@ export const Header = () => {
                   <div className="hidden md:flex items-center gap-2">
                     <Link
                       href="/account/login"
-                      className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                      className="text-sm font-medium text-foreground hover:text-primary hover:bg-muted/80 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       Sign in
                     </Link>
                     <Link
                       href="/account/signup"
-                      className="text-sm font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+                      className="text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       Create account
                     </Link>
@@ -239,53 +250,59 @@ export const Header = () => {
               <summary className="list-none p-2 hover:bg-secondary rounded-lg transition-colors cursor-pointer">
                 <Menu size={20} className="text-primary" />
               </summary>
-              <nav className="absolute top-16 right-0 bg-background border border-border rounded-lg shadow-lg p-4 min-w-48">
+              <nav className="absolute top-16 right-0 bg-background border border-border rounded-lg shadow-lg p-4 min-w-48 flex flex-col gap-1">
                 <button
                   type="button"
                   onClick={() => {
                     mobileMenuRef.current?.removeAttribute('open')
                     setSearchOpen(true)
                   }}
-                  className="flex items-center gap-2 w-full py-3 min-h-[44px] text-left text-foreground hover:text-primary font-medium uppercase tracking-wide text-sm touch-manipulation"
+                  className="flex items-center gap-2 w-full min-h-[44px] py-3 px-3 rounded-lg text-left text-foreground hover:text-primary hover:bg-muted/60 font-medium uppercase tracking-wide text-sm touch-manipulation"
                 >
                   <Search size={16} className="text-primary" />
                   Search
                 </button>
                 <Link
                   href="/products"
-                  className={`block py-3 min-h-[44px] flex items-center touch-manipulation ${navLinkClass(pathname, '/products')}`}
+                  className={`block min-h-[44px] py-3 px-3 rounded-lg flex items-center touch-manipulation ${navLinkClass(pathname, '/products')}`}
                 >
                   Shop
                 </Link>
                 <Link
                   href="/new-arrivals"
-                  className={`block py-3 min-h-[44px] flex items-center touch-manipulation ${navLinkClass(pathname, '/new-arrivals')}`}
+                  className={`block min-h-[44px] py-3 px-3 rounded-lg flex items-center touch-manipulation ${navLinkClass(pathname, '/new-arrivals')}`}
                 >
                   New Arrivals
                 </Link>
                 <Link
                   href="/men"
-                  className={`block py-3 min-h-[44px] flex items-center touch-manipulation ${navLinkClass(pathname, '/men')}`}
+                  className={`block min-h-[44px] py-3 px-3 rounded-lg flex items-center touch-manipulation ${navLinkClass(pathname, '/men')}`}
                 >
                   Men
                 </Link>
                 <Link
                   href="/women"
-                  className={`block py-3 min-h-[44px] flex items-center touch-manipulation ${navLinkClass(pathname, '/women')}`}
+                  className={`block min-h-[44px] py-3 px-3 rounded-lg flex items-center touch-manipulation ${navLinkClass(pathname, '/women')}`}
                 >
                   Women
+                </Link>
+                <Link
+                  href="/unisex"
+                  className={`block min-h-[44px] py-3 px-3 rounded-lg flex items-center touch-manipulation ${navLinkClass(pathname, '/unisex')}`}
+                >
+                  Unisex
                 </Link>
                 {!authLoading && (
                   <>
                     {user ? (
                       <>
-                        <Link href="/account" className="block py-3 min-h-[44px] flex items-center text-foreground hover:text-primary touch-manipulation">
+                        <Link href="/account" className="block min-h-[44px] py-3 px-3 rounded-lg flex items-center text-foreground hover:text-primary hover:bg-muted/60 touch-manipulation">
                           Account
                         </Link>
                         <button
                           type="button"
                           onClick={() => signOut()}
-                          className="flex items-center gap-2 w-full py-3 min-h-[44px] text-left text-foreground hover:text-primary touch-manipulation"
+                          className="flex items-center gap-2 w-full min-h-[44px] py-3 px-3 rounded-lg text-left text-foreground hover:text-primary hover:bg-muted/60 touch-manipulation"
                         >
                           <LogOut size={16} />
                           Sign out
@@ -293,10 +310,10 @@ export const Header = () => {
                       </>
                     ) : (
                       <>
-                        <Link href="/account/login" className="block py-3 min-h-[44px] flex items-center text-foreground hover:text-primary touch-manipulation">
+                        <Link href="/account/login" className="block min-h-[44px] py-3 px-3 rounded-lg flex items-center text-foreground hover:text-primary hover:bg-muted/60 touch-manipulation">
                           Sign in
                         </Link>
-                        <Link href="/account/signup" className="block py-3 min-h-[44px] flex items-center text-foreground hover:text-primary touch-manipulation">
+                        <Link href="/account/signup" className="block min-h-[44px] py-3 px-3 rounded-lg flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 touch-manipulation font-medium">
                           Create account
                         </Link>
                       </>

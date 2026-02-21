@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { ProductCard } from '@/components/product-card'
 import type { ProductCardProduct } from '@/components/product-card'
 import { useStoreProducts } from '@/hooks/use-store-products'
@@ -51,9 +51,11 @@ type ProductGridProps = {
   segment?: ProductSegment
   /** When true, show only products marked as New Arrivals. */
   newArrivalOnly?: boolean
+  /** Optional slot for filter button (mobile) - rendered in header row */
+  filterButton?: ReactNode
 }
 
-export function ProductGrid({ segment, newArrivalOnly }: ProductGridProps = {}) {
+export function ProductGrid({ segment, newArrivalOnly, filterButton }: ProductGridProps = {}) {
   const { products, loading, error } = useStoreProducts()
   const searchParams = useSearchParams()
 
@@ -67,6 +69,7 @@ export function ProductGrid({ segment, newArrivalOnly }: ProductGridProps = {}) 
       if (newArrivalOnly && !p.new_arrival) return false
       if (segment === 'Men' && p.segment !== 'Men' && p.segment !== 'Unisex') return false
       if (segment === 'Women' && p.segment !== 'Women' && p.segment !== 'Unisex') return false
+      if (segment === 'Unisex' && p.segment !== 'Unisex') return false
       if (categoryParam && p.category !== categoryParam) return false
       if (priceParam && !matchesPrice(Number(p.price), priceParam)) return false
       if (sizeParam && !(p.sizes ?? []).includes(sizeParam)) return false
@@ -91,9 +94,12 @@ export function ProductGrid({ segment, newArrivalOnly }: ProductGridProps = {}) 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          Showing {cardProducts.length} products
-        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          {filterButton}
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Showing {cardProducts.length} products
+          </p>
+        </div>
         <select className="min-h-[44px] px-3 sm:px-4 py-2 pr-8 sm:pr-10 border border-border rounded-lg bg-background text-foreground text-base sm:text-sm w-full sm:w-auto touch-manipulation">
           <option>Sort: Newest</option>
           <option>Price: Low to High</option>
@@ -102,7 +108,7 @@ export function ProductGrid({ segment, newArrivalOnly }: ProductGridProps = {}) 
         </select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {cardProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
