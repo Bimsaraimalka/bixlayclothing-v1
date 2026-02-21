@@ -1,8 +1,16 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { ProductFilter } from '@/components/product-filter'
 import { Suspense } from 'react'
+import { SITE_NAME } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'New Arrivals',
+  description: 'Latest Bixlay arrivals – fresh styles and new pieces. Be first to shop new drops.',
+  openGraph: { title: 'New Arrivals | ' + SITE_NAME, description: 'Fresh styles just landed.' },
+}
 
 export default function NewArrivalsPage() {
   return (

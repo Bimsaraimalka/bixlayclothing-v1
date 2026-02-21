@@ -1,9 +1,12 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Terms of Service',
   description: 'Bixlay Clothing terms of service. Rules and conditions for using our website and services.',
+  openGraph: { title: 'Terms of Service | ' + SITE_NAME },
 }
 
 export default function TermsPage() {

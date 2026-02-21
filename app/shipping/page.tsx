@@ -1,9 +1,12 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Shipping Policy',
   description: 'Bixlay Clothing shipping policy. Delivery times, costs, and tracking for Sri Lanka and international orders.',
+  openGraph: { title: 'Shipping Policy | ' + SITE_NAME },
 }
 
 export default function ShippingPage() {

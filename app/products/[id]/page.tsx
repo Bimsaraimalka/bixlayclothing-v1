@@ -1,13 +1,40 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductDetail } from '@/components/product-detail'
 import { RelatedProducts } from '@/components/related-products'
+import { fetchProductById } from '@/lib/supabase-data'
+import { SITE_NAME, BASE_URL } from '@/lib/site'
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+type Props = { params: Promise<{ id: string }> }
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const product = await fetchProductById(id)
+  if (!product) return { title: 'Product not found' }
+  const title = `${product.name} | ${SITE_NAME}`
+  const description =
+    product.details && product.details.length > 0
+      ? product.details.join(' · ')
+      : `${product.name} – ${product.category}. Premium quality.`
+  const image =
+    product.image_urls && product.image_urls.length > 0
+      ? product.image_urls[0]
+      : BASE_URL ? `${BASE_URL}/og-image.png` : '/og-image.png'
+  return {
+    title: product.name,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images: [{ url: image, width: 1200, height: 630, alt: product.name }],
+    },
+    twitter: { card: 'summary_large_image', title, description },
+  }
+}
+
+export default async function ProductPage({ params }: Props) {
   const { id } = await params
   return (
     <div className="min-h-screen flex flex-col">

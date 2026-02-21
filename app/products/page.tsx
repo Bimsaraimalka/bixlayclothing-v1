@@ -1,8 +1,16 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { ProductFilter } from '@/components/product-filter'
 import { Suspense } from 'react'
+import { SITE_NAME } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'Our Collection',
+  description: 'Browse the complete Bixlay collection – premium clothing for men and women. Quality fabrics, timeless styles.',
+  openGraph: { title: 'Our Collection | ' + SITE_NAME, description: 'Browse premium clothing for men and women.' },
+}
 
 export default function ProductsPage() {
   return (

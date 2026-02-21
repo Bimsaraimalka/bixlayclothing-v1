@@ -4,6 +4,16 @@ import { useState, useEffect } from 'react'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { Button } from '@/components/ui/button'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   fetchPromoCodes,
   addPromoCodeSupabase,
   updatePromoCodeSupabase,
@@ -34,6 +44,7 @@ export default function PromoCodesPage() {
     valid_until: '',
     max_uses: '',
   })
+  const [promoToDelete, setPromoToDelete] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const load = async () => {
@@ -127,10 +138,12 @@ export default function PromoCodesPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id)
+  const handleDeleteConfirm = async () => {
+    if (!promoToDelete) return
+    setDeletingId(promoToDelete)
     try {
-      await removePromoCodeSupabase(id)
+      await removePromoCodeSupabase(promoToDelete)
+      setPromoToDelete(null)
       await load()
     } finally {
       setDeletingId(null)
@@ -331,7 +344,7 @@ export default function PromoCodesPage() {
                           size="sm"
                           variant="outline"
                           className="text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(p.id)}
+                          onClick={() => setPromoToDelete(p.id)}
                           disabled={deletingId === p.id}
                         >
                           <Trash2 size={14} />
@@ -345,6 +358,32 @@ export default function PromoCodesPage() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!promoToDelete} onOpenChange={(open) => !open && setPromoToDelete(null)}>
+        <AlertDialogContent className="max-w-sm rounded-xl p-4 sm:p-6 gap-4">
+          <AlertDialogHeader className="text-left gap-2">
+            <AlertDialogTitle>Delete promo code?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {promoToDelete
+                ? `Remove "${list.find((x) => x.id === promoToDelete)?.code ?? 'this code'}"? This cannot be undone.`
+                : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogCancel className="m-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDeleteConfirm()
+              }}
+              disabled={!!deletingId}
+              className="m-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingId ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   )
 }

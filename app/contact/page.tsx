@@ -1,10 +1,13 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Mail } from 'lucide-react'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Contact Us',
   description: 'Get in touch with Bixlay. Email us at hello@bixlay.com for questions, orders, or support.',
+  openGraph: { title: 'Contact Us | ' + SITE_NAME, description: "We're here to help." },
 }
 
 export default function ContactPage() {

@@ -1,9 +1,12 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Return & Exchange Policy',
   description: 'Bixlay Clothing return and exchange policy. 21-day returns, store credit, and eligibility conditions.',
+  openGraph: { title: 'Return & Exchange Policy | ' + SITE_NAME },
 }
 
 export default function ReturnsPage() {

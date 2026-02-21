@@ -1,10 +1,13 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Mail, Heart, Sparkles, Users } from 'lucide-react'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Careers',
   description: 'Join the Bixlay team. Explore open positions and learn how to build your career with us.',
+  openGraph: { title: 'Careers | ' + SITE_NAME, description: 'Join the Bixlay team.' },
 }
 
 export default function CareersPage() {

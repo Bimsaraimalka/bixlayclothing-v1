@@ -23,6 +23,13 @@ export async function generateMetadata({ params }: Props) {
   return {
     title: post.title,
     description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      publishedTime: post.date,
+    },
+    twitter: { card: 'summary', title: post.title, description: post.excerpt },
   }
 }
 

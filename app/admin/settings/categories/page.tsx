@@ -4,6 +4,16 @@ import { useState } from 'react'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { useAdminData } from '@/components/admin/admin-data-context'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Trash2, Plus, Pencil } from 'lucide-react'
 
 export default function CategoriesSettingsPage() {
@@ -19,6 +29,7 @@ export default function CategoriesSettingsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -56,10 +67,12 @@ export default function CategoriesSettingsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id)
+  const handleDeleteConfirm = async () => {
+    if (!categoryToDelete) return
+    setDeletingId(categoryToDelete)
     try {
-      await removeProductCategory(id)
+      await removeProductCategory(categoryToDelete)
+      setCategoryToDelete(null)
     } finally {
       setDeletingId(null)
     }
@@ -147,7 +160,7 @@ export default function CategoriesSettingsPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDelete(cat.id)}
+                        onClick={() => setCategoryToDelete(cat.id)}
                         disabled={deletingId === cat.id}
                         className="shrink-0 text-destructive hover:text-destructive"
                         aria-label="Delete"
@@ -162,6 +175,32 @@ export default function CategoriesSettingsPage() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
+        <AlertDialogContent className="max-w-sm rounded-xl p-4 sm:p-6 gap-4">
+          <AlertDialogHeader className="text-left gap-2">
+            <AlertDialogTitle>Delete category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {categoryToDelete
+                ? `Remove "${productCategories.find((c) => c.id === categoryToDelete)?.name ?? 'this category'}"? Products using this category will keep it as text; you can no longer select it for new products.`
+                : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogCancel className="m-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDeleteConfirm()
+              }}
+              disabled={!!deletingId}
+              className="m-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingId ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   )
 }

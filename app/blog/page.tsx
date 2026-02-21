@@ -1,12 +1,15 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Calendar } from 'lucide-react'
 import { blogPosts } from '@/lib/blog-posts'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Blog',
   description: 'Bixlay blog – style tips, brand updates, and stories from the world of Bixlay.',
+  openGraph: { title: 'Blog | ' + SITE_NAME, description: 'Style tips, brand updates, and stories.' },
 }
 
 function formatDate(dateStr: string) {

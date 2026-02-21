@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { Edit, Trash2, Plus, Upload, X, GripVertical, ExternalLink } from 'lucide-react'
+import { Edit, Trash2, Plus, Upload, X, GripVertical, ExternalLink, Download } from 'lucide-react'
 import { uploadProductImage } from '@/lib/supabase-storage'
 import type { AdminProduct } from '@/lib/admin-data'
 import { PRODUCT_SEGMENTS, DEFAULT_CATEGORY_NAMES } from '@/lib/admin-data'
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { formatPrice } from '@/lib/utils'
 import { useAdminData } from '@/components/admin/admin-data-context'
+import { buildCsv, downloadCsv } from '@/lib/csv'
 
 const COLOR_PRESETS = [
   { label: 'Black & White', value: 'Black, White' },
@@ -81,6 +82,32 @@ export function AdminProducts() {
   const [editForm, setEditForm] = useState(emptyForm())
   const [dragAddImageIndex, setDragAddImageIndex] = useState<number | null>(null)
   const [dragEditImageIndex, setDragEditImageIndex] = useState<number | null>(null)
+
+  const handleDownloadProductsCsv = () => {
+    const headers = [
+      'ID', 'Name', 'Category', 'Price', 'Stock', 'Status', 'Colors', 'Sizes',
+      'Unisex', 'Segment', 'New arrival', 'Discount %', 'Promo code', 'Image URLs', 'Details',
+    ]
+    const rows = products.map((p) => [
+      p.id,
+      p.name,
+      p.category,
+      p.price,
+      p.stock,
+      p.status,
+      (p.colors ?? []).join('; '),
+      (p.sizes ?? []).join('; '),
+      p.unisex === true ? 'Yes' : 'No',
+      p.segment ?? '',
+      p.new_arrival === true ? 'Yes' : 'No',
+      p.discount_percent ?? '',
+      p.promo_code ?? '',
+      (p.image_urls ?? []).join('; '),
+      (p.details ?? []).join('; '),
+    ])
+    const csv = buildCsv(headers, rows)
+    downloadCsv(csv, `products-${new Date().toISOString().slice(0, 10)}.csv`)
+  }
 
   const filtered = products.filter((p) => {
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase())
@@ -247,13 +274,23 @@ export function AdminProducts() {
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Products</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage your product inventory and details</p>
         </div>
-        <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium touch-manipulation">
-              <Plus size={20} />
-              Add Product
-            </Button>
-          </DialogTrigger>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-[44px] gap-2"
+            onClick={handleDownloadProductsCsv}
+          >
+            <Download size={18} />
+            Download CSV
+          </Button>
+          <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium touch-manipulation">
+                <Plus size={20} />
+                Add Product
+              </Button>
+            </DialogTrigger>
           <DialogContent className="flex flex-col p-0 gap-0 w-[calc(100vw-2rem)] max-w-md max-h-[90dvh] sm:max-h-[85vh] overflow-hidden rounded-xl">
             <DialogHeader className="shrink-0 border-b border-border bg-background px-4 sm:px-6 pt-4 pb-3 pr-16 sm:pr-16">
               <DialogTitle className="text-lg sm:text-xl">Add new product</DialogTitle>
@@ -531,7 +568,8 @@ export function AdminProducts() {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
 
         <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
           <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-sm rounded-xl p-4 sm:p-6 gap-4 sm:gap-6">

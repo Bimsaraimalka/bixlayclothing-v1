@@ -5,11 +5,12 @@ import { usePathname, useRouter } from 'next/navigation'
 import { BarChart3, Package, ShoppingBag, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Store, Tag } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAdminAuth } from '@/components/admin/admin-auth-context'
+import { useAdminData } from '@/components/admin/admin-data-context'
 
 const NAV_LINKS = [
   { href: '/admin', label: 'Dashboard', icon: BarChart3 },
   { href: '/admin/products', label: 'Products', icon: Package },
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+  { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, badgeKey: 'orders' },
   { href: '/admin/promo-codes', label: 'Promo codes', icon: Tag },
 ]
 
@@ -23,6 +24,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { logout } = useAdminAuth()
+  const { orders } = useAdminData()
+  const pendingOrderCount = orders.filter((o) => o.status === 'Pending').length
   const isSettingsPath = pathname.startsWith('/admin/settings')
   const [settingsExpanded, setSettingsExpanded] = useState(isSettingsPath)
 
@@ -77,8 +80,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+          {NAV_LINKS.map(({ href, label, icon: Icon, badgeKey }) => {
             const isActive = pathname === href || (href !== '/admin' && pathname.startsWith(href))
+            const showBadge = badgeKey === 'orders' && pendingOrderCount > 0
             return (
               <Link
                 key={href}
@@ -91,7 +95,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Icon size={22} className="shrink-0" />
-                <span className="truncate">{label}</span>
+                <span className="truncate flex-1">{label}</span>
+                {showBadge && (
+                  <span
+                    className="shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-semibold"
+                    aria-label={`${pendingOrderCount} new order${pendingOrderCount !== 1 ? 's' : ''}`}
+                  >
+                    {pendingOrderCount > 99 ? '99+' : pendingOrderCount}
+                  </span>
+                )}
               </Link>
             )
           })}

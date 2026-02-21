@@ -4,6 +4,16 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Trash2, Plus, Minus, Tag, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/components/cart-context'
 import { validatePromoCode } from '@/app/actions/promo'
@@ -13,6 +23,7 @@ export function CartContent() {
   const [promoInput, setPromoInput] = useState('')
   const [promoError, setPromoError] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null)
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const freeShippingThreshold = 5000
@@ -125,7 +136,7 @@ export function CartContent() {
                 {/* Remove Button */}
                 <button
                   type="button"
-                  onClick={() => removeItem(`${item.id}-${item.size}-${item.color}`)}
+                  onClick={() => setItemToRemove(`${item.id}-${item.size}-${item.color}`)}
                   className="self-start min-w-[44px] min-h-[44px] p-2 hover:bg-destructive/10 rounded-lg transition-colors text-destructive shrink-0 flex items-center justify-center touch-manipulation"
                   aria-label="Remove item"
                 >
@@ -244,6 +255,34 @@ export function CartContent() {
           </div>
         </div>
       )}
+
+      <AlertDialog open={!!itemToRemove} onOpenChange={(open) => !open && setItemToRemove(null)}>
+        <AlertDialogContent className="max-w-sm rounded-xl p-4 sm:p-6 gap-4">
+          <AlertDialogHeader className="text-left gap-2">
+            <AlertDialogTitle>Remove from cart?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {itemToRemove
+                ? `Remove "${cartItems.find((i) => `${i.id}-${i.size}-${i.color}` === itemToRemove)?.name ?? 'this item'}" from your cart?`
+                : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogCancel className="m-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                if (itemToRemove) {
+                  removeItem(itemToRemove)
+                  setItemToRemove(null)
+                }
+              }}
+              className="m-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

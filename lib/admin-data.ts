@@ -56,6 +56,40 @@ export type AdminOrder = {
   status: string
   date: string
   promo_code?: string | null
+  /** Payment method: bank_transfer | card | cash_on_delivery */
+  payment_method?: string | null
+  phone?: string | null
+  address?: string | null
+  city?: string | null
+  state?: string | null
+  zip_code?: string | null
+  country?: string | null
+  /** Product line (admin-created orders) */
+  product_id?: string | null
+  product_name?: string | null
+  color?: string | null
+  size?: string | null
+  quantity?: number | null
+  unit_price?: number | null
+  /** Order source: facebook | instagram | whatsapp | phone_call | other */
+  order_source?: string | null
+  /** When order_source is 'other', specific text from customer */
+  order_source_other?: string | null
+}
+
+/** Single line item on an order (from order_items table) */
+export type OrderItem = {
+  id: string
+  order_id: string
+  product_id: string | null
+  product_name: string | null
+  color: string | null
+  size: string | null
+  quantity: number
+  unit_price: number
+  discount_amount: number
+  /** quantity * unit_price - discount_amount */
+  line_total: number
 }
 
 /** Site-wide promo code (admin-created; applied at cart). */

@@ -24,7 +24,7 @@ function SuccessContent() {
         </p>
       )}
       <p className="text-sm text-muted-foreground mb-8">
-        Save this ID to track your order in the admin or when contacting support.
+        Save this ID to track your order or when contacting support.
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Button asChild>

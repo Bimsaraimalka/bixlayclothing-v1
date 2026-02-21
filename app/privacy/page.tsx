@@ -1,9 +1,12 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: 'Bixlay Clothing privacy policy. How we collect, use, and protect your personal information.',
+  openGraph: { title: 'Privacy Policy | ' + SITE_NAME },
 }
 
 export default function PrivacyPage() {

@@ -166,12 +166,11 @@ export const Header = () => {
                                   }}
                                   className="flex items-center gap-3 px-4 py-3 hover:bg-secondary active:bg-secondary transition-colors text-left touch-manipulation"
                                 >
-                                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                                  <div className="relative w-10 h-10 rounded bg-muted shrink-0 overflow-hidden">
                                     {thumb ? (
-                                      /* eslint-disable-next-line @next/next/no-img-element */
-                                      <img src={thumb} alt="" className="w-full h-full object-cover" />
+                                      <Image src={thumb} alt="" fill sizes="40px" className="object-cover" />
                                     ) : (
-                                      <span className="text-muted-foreground text-xs">—</span>
+                                      <span className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs">—</span>
                                     )}
                                   </div>
                                   <div className="min-w-0 flex-1">

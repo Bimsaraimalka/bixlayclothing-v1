@@ -1,9 +1,12 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { SITE_NAME } from '@/lib/site'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'About Us',
   description: 'Learn about Bixlay – premium clothing for the modern individual. Quality, style, and comfort in every piece.',
+  openGraph: { title: 'About Us | ' + SITE_NAME, description: 'Our story and what we stand for.' },
 }
 
 export default function AboutPage() {

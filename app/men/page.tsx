@@ -1,8 +1,16 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { ProductFilter } from '@/components/product-filter'
 import { Suspense } from 'react'
+import { SITE_NAME } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'Men',
+  description: 'Premium clothing for men – refined styles, quality fabrics. Shop shirts, pants, and essentials.',
+  openGraph: { title: 'Men | ' + SITE_NAME, description: 'Premium clothing for men.' },
+}
 
 export default function MenPage() {
   return (

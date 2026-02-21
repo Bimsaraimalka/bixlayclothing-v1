@@ -1,6 +1,15 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { CartContent } from '@/components/cart-content'
+import { SITE_NAME } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'Shopping Cart',
+  description: 'Review your Bixlay cart and proceed to checkout. Secure checkout and fast delivery.',
+  robots: { index: false, follow: true },
+  openGraph: { title: 'Shopping Cart | ' + SITE_NAME },
+}
 
 export default function CartPage() {
   return (

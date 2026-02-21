@@ -1,8 +1,16 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { ProductFilter } from '@/components/product-filter'
 import { Suspense } from 'react'
+import { SITE_NAME } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'Women',
+  description: 'Curated clothing for women – elegant and comfortable. Shop tops, dresses, and more.',
+  openGraph: { title: 'Women | ' + SITE_NAME, description: 'Curated premium clothing for women.' },
+}
 
 export default function WomenPage() {
   return (

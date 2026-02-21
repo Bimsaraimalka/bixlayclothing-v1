@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase'
-import type { AdminProduct, AdminOrder, ProductTemplate, ProductCategory, PromoCode } from '@/lib/admin-data'
+import type { AdminProduct, AdminOrder, OrderItem, ProductTemplate, ProductCategory, PromoCode } from '@/lib/admin-data'
 
 type ProductRow = {
   id: number
@@ -28,6 +28,34 @@ type OrderRow = {
   status: string
   date: string
   promo_code?: string | null
+  payment_method?: string | null
+  phone?: string | null
+  address?: string | null
+  city?: string | null
+  state?: string | null
+  zip_code?: string | null
+  country?: string | null
+  product_id?: string | null
+  product_name?: string | null
+  color?: string | null
+  size?: string | null
+  quantity?: number | null
+  unit_price?: number | null
+  order_source?: string | null
+  order_source_other?: string | null
+  created_at?: string
+}
+
+type OrderItemRow = {
+  id: number
+  order_id: number
+  product_id: string | null
+  product_name: string | null
+  color: string | null
+  size: string | null
+  quantity: number
+  unit_price: number
+  discount_amount: number
   created_at?: string
 }
 
@@ -92,15 +120,36 @@ function orderDisplayId(numericId: number): string {
   return `#ORD-${String(numericId).padStart(3, '0')}`
 }
 
+function strOrNull(s: string | null | undefined): string | null {
+  return typeof s === 'string' && s.trim() ? s.trim() : null
+}
+
 function toAdminOrder(r: OrderRow): AdminOrder {
+  const qty = r.quantity != null && !Number.isNaN(Number(r.quantity)) ? Number(r.quantity) : null
+  const up = r.unit_price != null && !Number.isNaN(Number(r.unit_price)) ? Number(r.unit_price) : null
   return {
     id: orderDisplayId(r.id),
     customer: r.customer,
     email: r.email,
     amount: r.amount,
+    payment_method: strOrNull(r.payment_method),
     status: r.status,
     date: r.date,
-    promo_code: typeof r.promo_code === 'string' && r.promo_code.trim() ? r.promo_code.trim() : null,
+    promo_code: strOrNull(r.promo_code),
+    phone: strOrNull(r.phone),
+    address: strOrNull(r.address),
+    city: strOrNull(r.city),
+    state: strOrNull(r.state),
+    zip_code: strOrNull(r.zip_code),
+    country: strOrNull(r.country),
+    product_id: strOrNull(r.product_id),
+    product_name: strOrNull(r.product_name),
+    color: strOrNull(r.color),
+    size: strOrNull(r.size),
+    quantity: qty,
+    unit_price: up,
+    order_source: strOrNull(r.order_source),
+    order_source_other: strOrNull(r.order_source_other),
   }
 }
 
@@ -122,6 +171,101 @@ function parseOrderId(displayId: string): number | null {
   const match = displayId.replace(/^#ORD-0*/, '').replace(/^ORD-0*/, '')
   const n = parseInt(match, 10)
   return Number.isNaN(n) ? null : n
+}
+
+function toOrderItem(r: OrderItemRow): OrderItem {
+  const qty = Number(r.quantity) || 0
+  const up = Number(r.unit_price) || 0
+  const disc = Number(r.discount_amount) || 0
+  const lineTotal = Math.max(0, qty * up - disc)
+  return {
+    id: String(r.id),
+    order_id: String(r.order_id),
+    product_id: strOrNull(r.product_id),
+    product_name: strOrNull(r.product_name),
+    color: strOrNull(r.color),
+    size: strOrNull(r.size),
+    quantity: qty,
+    unit_price: up,
+    discount_amount: disc,
+    line_total: lineTotal,
+  }
+}
+
+export async function fetchOrderItems(orderDisplayId: string): Promise<OrderItem[]> {
+  const orderId = parseOrderId(orderDisplayId)
+  if (orderId == null) return []
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('order_items')
+    .select('id, order_id, product_id, product_name, color, size, quantity, unit_price, discount_amount')
+    .eq('order_id', orderId)
+    .order('id', { ascending: true })
+  if (error) return []
+  return (data ?? []).map((r) => toOrderItem(r as OrderItemRow))
+}
+
+export type NewOrderItemInput = {
+  product_id: string | null
+  product_name: string | null
+  color: string | null
+  size: string | null
+  quantity: number
+  unit_price: number
+  discount_amount?: number
+}
+
+export async function addOrderWithItems(
+  order: Omit<AdminOrder, 'id'> & { promo_code?: string | null; payment_method?: string | null },
+  items: NewOrderItemInput[]
+): Promise<AdminOrder> {
+  const supabase = createClient()
+  const promoCode = strOrNull(order.promo_code)
+  const paymentMethod = strOrNull(order.payment_method)
+  const totalAmount = items.reduce((sum, it) => {
+    const line = Math.max(0, it.quantity * it.unit_price - (it.discount_amount ?? 0))
+    return sum + line
+  }, 0)
+  const amountStr = totalAmount > 0 ? `Rs. ${Math.round(totalAmount).toLocaleString('en-IN')}` : order.amount
+  const { data: orderData, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      customer: order.customer,
+      email: order.email,
+      amount: amountStr,
+      status: order.status,
+      date: order.date,
+      promo_code: promoCode,
+      payment_method: paymentMethod,
+      phone: strOrNull(order.phone),
+      address: strOrNull(order.address),
+      city: strOrNull(order.city),
+      state: strOrNull(order.state),
+      zip_code: strOrNull(order.zip_code),
+      country: strOrNull(order.country),
+      order_source: strOrNull(order.order_source),
+      order_source_other: strOrNull(order.order_source_other),
+    })
+    .select('id, customer, email, amount, status, date, promo_code, payment_method, phone, address, city, state, zip_code, country, order_source, order_source_other')
+    .single()
+  if (orderError) throw orderError
+  const numericOrderId = (orderData as { id: number }).id
+  for (const it of items) {
+    if (it.quantity <= 0) continue
+    const { error: itemError } = await supabase.from('order_items').insert({
+      order_id: numericOrderId,
+      product_id: it.product_id || null,
+      product_name: it.product_name || null,
+      color: it.color || null,
+      size: it.size || null,
+      quantity: it.quantity,
+      unit_price: it.unit_price,
+      discount_amount: it.discount_amount ?? 0,
+    })
+    if (itemError) throw itemError
+  }
+  if (promoCode) await incrementPromoTimesUsed(promoCode)
+  return toAdminOrder({ ...orderData, product_id: null, product_name: null, color: null, size: null, quantity: null, unit_price: null } as OrderRow)
 }
 
 export async function fetchProducts(): Promise<AdminProduct[]> {
@@ -149,7 +293,7 @@ export async function fetchOrders(): Promise<AdminOrder[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('orders')
-    .select('id, customer, email, amount, status, date, promo_code, created_at')
+    .select('id, customer, email, amount, status, date, promo_code, payment_method, phone, address, city, state, zip_code, country, product_id, product_name, color, size, quantity, unit_price, order_source, order_source_other, created_at')
     .order('id', { ascending: false })
   if (error) throw error
   return (data ?? []).map((r) => toAdminOrder(r as OrderRow))
@@ -407,10 +551,11 @@ export async function incrementPromoTimesUsed(code: string): Promise<void> {
 }
 
 export async function addOrderSupabase(
-  order: Omit<AdminOrder, 'id'> & { promo_code?: string | null }
+  order: Omit<AdminOrder, 'id'> & { promo_code?: string | null; payment_method?: string | null }
 ): Promise<AdminOrder> {
   const supabase = createClient()
-  const promoCode = order.promo_code && order.promo_code.trim() ? order.promo_code.trim() : null
+  const promoCode = strOrNull(order.promo_code)
+  const paymentMethod = strOrNull(order.payment_method)
   const { data, error } = await supabase
     .from('orders')
     .insert({
@@ -420,8 +565,23 @@ export async function addOrderSupabase(
       status: order.status,
       date: order.date,
       promo_code: promoCode,
+      payment_method: paymentMethod,
+      phone: strOrNull(order.phone),
+      address: strOrNull(order.address),
+      city: strOrNull(order.city),
+      state: strOrNull(order.state),
+      zip_code: strOrNull(order.zip_code),
+      country: strOrNull(order.country),
+      product_id: strOrNull(order.product_id),
+      product_name: order.product_name?.trim() || null,
+      color: strOrNull(order.color),
+      size: strOrNull(order.size),
+      quantity: order.quantity != null && order.quantity > 0 ? order.quantity : null,
+      unit_price: order.unit_price != null && !Number.isNaN(Number(order.unit_price)) ? Number(order.unit_price) : null,
+      order_source: strOrNull(order.order_source),
+      order_source_other: strOrNull(order.order_source_other),
     })
-    .select('id, customer, email, amount, status, date, promo_code')
+    .select('id, customer, email, amount, status, date, promo_code, payment_method, phone, address, city, state, zip_code, country, product_id, product_name, color, size, quantity, unit_price, order_source, order_source_other')
     .single()
   if (error) throw error
   if (promoCode) await incrementPromoTimesUsed(promoCode)

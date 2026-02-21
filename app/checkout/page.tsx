@@ -1,6 +1,15 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { CheckoutForm } from '@/components/checkout-form'
+import { SITE_NAME } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'Checkout',
+  description: 'Complete your Bixlay order. Secure payment and delivery details.',
+  robots: { index: false, follow: true },
+  openGraph: { title: 'Checkout | ' + SITE_NAME },
+}
 
 export default function CheckoutPage() {
   return (
