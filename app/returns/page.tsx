@@ -88,8 +88,8 @@ export default function ReturnsPage() {
             </p>
             <p className="text-foreground/90 mb-2">
               <strong>Support Email:</strong>{' '}
-              <a href="mailto:support@bixlay.com" className="text-primary hover:underline">
-                support@bixlay.com
+              <a href="mailto:hello@bixlay.com" className="text-primary hover:underline">
+                hello@bixlay.com
               </a>
             </p>
             <p className="text-foreground/90 mb-8">
@@ -111,8 +111,8 @@ export default function ReturnsPage() {
             </p>
             <p className="text-foreground/90 mb-4">
               <strong>Email:</strong>{' '}
-              <a href="mailto:support@bixlay.com" className="text-primary hover:underline">
-                support@bixlay.com
+              <a href="mailto:hello@bixlay.com" className="text-primary hover:underline">
+                hello@bixlay.com
               </a>
             </p>
             <p className="text-foreground/90 mb-8">
@@ -137,8 +137,8 @@ export default function ReturnsPage() {
               For international orders, please contact our support team:
             </p>
             <p className="text-foreground/90 mb-4">
-              <a href="mailto:support@bixlay.com" className="text-primary hover:underline">
-                support@bixlay.com
+              <a href="mailto:hello@bixlay.com" className="text-primary hover:underline">
+                hello@bixlay.com
               </a>
             </p>
             <p className="text-foreground/90 mb-8">
