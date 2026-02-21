@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Package, Send, RotateCcw, CheckCircle, Eye, Download, Plus, Search } from 'lucide-react'
 import { useAdminData } from '@/components/admin/admin-data-context'
+import { LoadingScreen } from '@/components/loading-screen'
 import { buildCsv, downloadCsv } from '@/lib/csv'
 import { addOrderWithItems, fetchOrderItems } from '@/lib/supabase-data'
 import { formatPrice } from '@/lib/utils'
@@ -529,11 +530,7 @@ export function AdminOrders() {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Loading orders…</p>
-      </div>
-    )
+    return <LoadingScreen message="Loading orders…" />
   }
 
   return (

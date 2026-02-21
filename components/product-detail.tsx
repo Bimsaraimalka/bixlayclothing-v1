@@ -8,6 +8,7 @@ import { ShoppingCart, Share2, Check, ChevronRight } from 'lucide-react'
 import { useCart } from '@/components/cart-context'
 import { formatPrice } from '@/lib/utils'
 import { useStoreProduct } from '@/hooks/use-store-products'
+import { LoadingScreen } from '@/components/loading-screen'
 
 const DEFAULT_DETAILS = [
   'Premium materials',
@@ -108,11 +109,7 @@ export function ProductDetail({ productId }: { productId: string }) {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Loading product…</p>
-      </div>
-    )
+    return <LoadingScreen variant="productDetail" />
   }
   if (error || !product) {
     return (
@@ -172,7 +169,7 @@ export function ProductDetail({ productId }: { productId: string }) {
               priority
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 pr-4">
+          <div className="flex gap-2 overflow-x-auto pt-2 pb-2 px-2 -mx-2">
             {previewImages.map((src, index) => (
                   <button
                     key={index}

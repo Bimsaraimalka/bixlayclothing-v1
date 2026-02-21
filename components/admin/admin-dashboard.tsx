@@ -3,17 +3,14 @@
 import { TrendingUp, Package, ShoppingBag, DollarSign } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 import { useAdminData } from '@/components/admin/admin-data-context'
+import { LoadingScreen } from '@/components/loading-screen'
 
 export function AdminDashboard() {
   const { products, orders, totalRevenue, totalOrders, loading, error } = useAdminData()
   const completedOrders = orders.filter((o) => o.status === 'Completed' || o.status === 'Shipped').length
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Loading dashboard…</p>
-      </div>
-    )
+    return <LoadingScreen message="Loading dashboard…" />
   }
   if (error) {
     return (

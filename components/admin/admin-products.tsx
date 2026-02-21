@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { formatPrice } from '@/lib/utils'
 import { useAdminData } from '@/components/admin/admin-data-context'
+import { LoadingScreen } from '@/components/loading-screen'
 import { buildCsv, downloadCsv } from '@/lib/csv'
 
 const COLOR_PRESETS = [
@@ -255,11 +256,7 @@ export function AdminProducts() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Loading products…</p>
-      </div>
-    )
+    return <LoadingScreen message="Loading products…" />
   }
 
   return (

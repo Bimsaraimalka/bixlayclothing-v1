@@ -6,6 +6,7 @@ import type { ProductCardProduct } from '@/components/product-card'
 import { useStoreProducts } from '@/hooks/use-store-products'
 import { useSearchParams } from 'next/navigation'
 import type { ProductSegment } from '@/lib/admin-data'
+import { LoadingScreen } from '@/components/loading-screen'
 
 function toCardProduct(p: {
   id: string
@@ -77,11 +78,7 @@ export function ProductGrid({ segment, newArrivalOnly }: ProductGridProps = {}) 
   const cardProducts = filtered.map(toCardProduct)
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Loading products…</p>
-      </div>
-    )
+    return <LoadingScreen variant="productGrid" />
   }
   if (error) {
     return (
