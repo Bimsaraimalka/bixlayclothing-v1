@@ -7,6 +7,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { useCustomerAuth } from '@/components/customer-auth-context'
+import { LoadingScreen } from '@/components/loading-screen'
 
 export default function AccountPage() {
   const router = useRouter()
@@ -23,7 +24,7 @@ export default function AccountPage() {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center px-4 py-12">
-          <p className="text-muted-foreground">Loading…</p>
+          <LoadingScreen message="Loading your account…" />
         </main>
         <Footer />
       </div>

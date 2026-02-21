@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ProductCard } from '@/components/product-card'
 import type { ProductCardProduct } from '@/components/product-card'
 import { useStoreProducts } from '@/hooks/use-store-products'
+import { LoadingScreen } from '@/components/loading-screen'
 
 function toCardProduct(p: {
   id: string
@@ -52,7 +53,7 @@ export const FeaturedProducts = () => {
         </div>
 
         {loading ? (
-          <p className="text-center py-12 text-muted-foreground">Loading…</p>
+          <LoadingScreen variant="productGrid" className="py-4" />
         ) : error ? (
           <p className="text-center py-12 text-destructive text-sm">{error}</p>
         ) : cardProducts.length > 0 ? (

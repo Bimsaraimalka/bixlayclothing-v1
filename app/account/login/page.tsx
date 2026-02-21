@@ -7,6 +7,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { useCustomerAuth } from '@/components/customer-auth-context'
+import { LoadingScreen } from '@/components/loading-screen'
 
 function LoginForm() {
   const router = useRouter()
@@ -100,7 +101,7 @@ export default function AccountLoginPage() {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center px-4 py-8">
-          <p className="text-muted-foreground">Loading…</p>
+          <LoadingScreen message="Loading…" />
         </main>
         <Footer />
       </div>
