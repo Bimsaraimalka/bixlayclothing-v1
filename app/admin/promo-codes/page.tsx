@@ -43,7 +43,13 @@ export default function PromoCodesPage() {
       const data = await fetchPromoCodes()
       setList(data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load promo codes')
+      const message =
+        e instanceof Error
+          ? e.message
+          : typeof (e as { message?: string })?.message === 'string'
+            ? (e as { message: string }).message
+            : 'Failed to load promo codes'
+      setError(message)
       setList([])
     } finally {
       setLoading(false)
@@ -144,8 +150,13 @@ export default function PromoCodesPage() {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-4 text-destructive text-sm">
-            {error}
+          <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-4 text-destructive text-sm space-y-2">
+            <p>{error}</p>
+            {(error.includes('does not exist') || error.includes('relation') || error.includes('promo_codes')) && (
+              <p className="text-foreground/90 mt-2">
+                Run the migration in Supabase SQL Editor: <code className="bg-muted px-1.5 py-0.5 rounded text-xs break-all">supabase/migrations/add-promo-codes.sql</code>
+              </p>
+            )}
           </div>
         )}
 
