@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Package, ShoppingBag, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, FileStack, Store, Tag } from 'lucide-react'
+import { BarChart3, Package, ShoppingBag, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Store, Tag } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAdminAuth } from '@/components/admin/admin-auth-context'
 
@@ -16,7 +16,6 @@ const NAV_LINKS = [
 const SETTINGS_SUB_ITEMS = [
   { href: '/admin/settings', label: 'General' },
   { href: '/admin/settings/categories', label: 'Categories' },
-  { href: '/admin/settings/product-template', label: 'Product template', icon: FileStack },
 ]
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -97,7 +96,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             )
           })}
 
-          {/* Settings dropdown with Product template */}
+          {/* Settings dropdown */}
           <div className="pt-1">
             <button
               type="button"

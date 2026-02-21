@@ -70,7 +70,7 @@ const emptyForm = () => ({
 })
 
 export function AdminProducts() {
-  const { products, productTemplates, productCategories, addProduct, updateProduct, removeProduct, loading, error } = useAdminData()
+  const { products, productCategories, addProduct, updateProduct, removeProduct, loading, error } = useAdminData()
   const categoryNames = productCategories.length > 0 ? productCategories.map((c) => c.name) : [...DEFAULT_CATEGORY_NAMES]
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
@@ -116,9 +116,7 @@ export function AdminProducts() {
     })
   }
 
-  const templatesToShow = productTemplates.length > 0
-    ? productTemplates.map((t) => ({ id: t.id, name: t.name, category: t.category, colors: t.colors, sizes: t.sizes, unisex: t.unisex }))
-    : QUICK_TEMPLATES.map((t) => ({ id: undefined, ...t }))
+  const templatesToShow = QUICK_TEMPLATES.map((t) => ({ id: undefined as string | undefined, ...t }))
 
   const applyTemplate = (t: { name: string; category: string; colors: string; sizes: string; unisex?: boolean }) => {
     setForm((f) => ({
