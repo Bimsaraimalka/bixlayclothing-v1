@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS orders (
   session_id VARCHAR(255) NOT NULL,
   total_price DECIMAL(10, 2) NOT NULL,
   status VARCHAR(50) DEFAULT 'pending',
+  stripe_payment_intent_id VARCHAR(255),
   customer_email VARCHAR(255),
   customer_name VARCHAR(255),
   shipping_address TEXT,
@@ -54,6 +55,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_cart_items_session ON cart_items(session_id);
 CREATE INDEX IF NOT EXISTS idx_orders_session ON orders(session_id);
+CREATE INDEX IF NOT EXISTS idx_orders_stripe_intent ON orders(stripe_payment_intent_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 
 -- Insert sample products for testing
