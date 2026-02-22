@@ -93,7 +93,7 @@ export const Header = () => {
               width={240}
               height={48}
               className="h-5 sm:h-6 w-auto object-contain"
-              quality={95}
+              quality={75}
               priority
               sizes="(max-width: 640px) 80px, 96px"
             />
