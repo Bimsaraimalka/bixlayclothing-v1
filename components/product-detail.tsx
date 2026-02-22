@@ -56,6 +56,16 @@ function getColorHex(colorName: string): string {
   return COLOR_SWATCH[key] ?? (key.startsWith('#') ? key : '#9ca3af')
 }
 
+/** Light colors (white, cream, etc.) – use grey for label text so it’s readable. */
+const LIGHT_COLOR_KEYS = new Set(['white', 'cream', 'lavender', 'mint', 'light blue'])
+
+function getColorLabelStyle(colorName: string): React.CSSProperties {
+  const key = colorName.trim().toLowerCase()
+  const hex = getColorHex(colorName)
+  if (LIGHT_COLOR_KEYS.has(key)) return { color: '#6b7280' }
+  return { color: hex }
+}
+
 export function ProductDetail({ productId }: { productId: string }) {
   const pathname = usePathname()
   const { addItem, openCart } = useCart()
@@ -91,7 +101,6 @@ export function ProductDetail({ productId }: { productId: string }) {
       size: (selectedSize || sizes[0]) ?? '',
       color: (selectedColor || colors[0]) ?? '',
       quantity,
-      image: displayImages[selectedImageIndex] ?? displayImages[0],
     })
     openCart()
     setIsAdded(true)
@@ -205,7 +214,7 @@ export function ProductDetail({ productId }: { productId: string }) {
           {colors.length > 0 && (
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-foreground">
-                Color: <span style={{ color: getColorHex((selectedColor || colors[0]) ?? '') }}>{(selectedColor || colors[0]) ?? ''}</span>
+                Color: <span style={getColorLabelStyle((selectedColor || colors[0]) ?? '')}>{(selectedColor || colors[0]) ?? ''}</span>
               </label>
               <div className="flex gap-1.5 sm:gap-2">
                 {colors.map((color) => (

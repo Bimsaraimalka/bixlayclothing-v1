@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { X, Trash2, Plus, Minus } from 'lucide-react'
+import { X, Trash2, Plus, Minus, Tag } from 'lucide-react'
 import { useCart } from '@/components/cart-context'
+import { validatePromoCode } from '@/app/actions/promo'
+import { useCartProductImages } from '@/hooks/use-cart-product-images'
 import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,8 +21,12 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function CartDrawer() {
-  const { isOpen, closeCart, items, itemCount, updateQuantity, removeItem, appliedPromo } = useCart()
+  const { isOpen, closeCart, items, itemCount, updateQuantity, removeItem, appliedPromo, setAppliedPromo } = useCart()
+  const productImages = useCartProductImages(items)
   const [itemToRemove, setItemToRemove] = useState<string | null>(null)
+  const [promoInput, setPromoInput] = useState('')
+  const [promoError, setPromoError] = useState('')
+  const [promoLoading, setPromoLoading] = useState(false)
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountAmount = appliedPromo
@@ -29,6 +35,35 @@ export function CartDrawer() {
       : Math.min(appliedPromo.discount_value, subtotal)
     : 0
   const total = Math.max(0, subtotal - discountAmount)
+
+  const handleApplyPromo = async () => {
+    const code = promoInput.trim()
+    if (!code) return
+    setPromoError('')
+    setPromoLoading(true)
+    try {
+      const result = await validatePromoCode(code)
+      if (result.valid) {
+        setAppliedPromo({
+          code: result.code,
+          discount_type: result.discount_type,
+          discount_value: result.discount_value,
+        })
+        setPromoInput('')
+      } else {
+        setPromoError(result.error)
+      }
+    } catch {
+      setPromoError('Could not validate code')
+    } finally {
+      setPromoLoading(false)
+    }
+  }
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null)
+    setPromoError('')
+  }
 
   if (!isOpen) return null
 
@@ -79,9 +114,9 @@ export function CartDrawer() {
                   className="flex gap-3 border-b border-border pb-3 last:border-0"
                 >
                   <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.image ? (
+                    {productImages[item.id] ? (
                       <Image
-                        src={item.image}
+                        src={productImages[item.id]}
                         alt={item.name}
                         fill
                         className="object-cover"
@@ -135,17 +170,62 @@ export function CartDrawer() {
 
         {items.length > 0 && (
           <div className="border-t border-border p-4 space-y-3">
-            <div className="flex justify-between text-base">
+            {/* Promo code */}
+            <div className="space-y-1.5">
+              {appliedPromo ? (
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-secondary px-3 py-2">
+                  <span className="text-xs sm:text-sm font-medium text-foreground truncate">
+                    <Tag size={12} className="inline mr-1.5 text-primary shrink-0" />
+                    {appliedPromo.code}
+                    {appliedPromo.discount_type === 'percent'
+                      ? ` (${appliedPromo.discount_value}% off)`
+                      : ` (Rs. ${appliedPromo.discount_value} off)`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRemovePromo}
+                    className="p-1 rounded hover:bg-background text-muted-foreground touch-manipulation shrink-0"
+                    aria-label="Remove promo code"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder="Promo code"
+                    className="flex-1 min-h-[40px] px-2.5 py-2 border border-border rounded-lg bg-background text-foreground text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
+                    disabled={promoLoading}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="min-h-[40px] shrink-0 touch-manipulation"
+                    onClick={handleApplyPromo}
+                    disabled={promoLoading || !promoInput.trim()}
+                  >
+                    {promoLoading ? '…' : 'Apply'}
+                  </Button>
+                </div>
+              )}
+              {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+            </div>
+
+            <div className="flex justify-between text-sm sm:text-base">
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-semibold">{formatPrice(subtotal)}</span>
             </div>
             {discountAmount > 0 && appliedPromo && (
-              <div className="flex justify-between text-base text-accent font-medium">
+              <div className="flex justify-between text-sm sm:text-base text-accent font-medium">
                 <span>Discount ({appliedPromo.code})</span>
                 <span>-{formatPrice(discountAmount)}</span>
               </div>
             )}
-            <div className="flex justify-between text-base font-bold">
+            <div className="flex justify-between text-sm sm:text-base font-bold">
               <span>Total</span>
               <span>{formatPrice(total)}</span>
             </div>

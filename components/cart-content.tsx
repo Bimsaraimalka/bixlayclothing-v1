@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Trash2, Plus, Minus, Tag, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,10 +17,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/components/cart-context'
+import { useCartProductImages } from '@/hooks/use-cart-product-images'
 import { validatePromoCode } from '@/app/actions/promo'
 
 export function CartContent() {
   const { items: cartItems, updateQuantity, removeItem, appliedPromo, setAppliedPromo } = useCart()
+  const productImages = useCartProductImages(cartItems)
   const [promoInput, setPromoInput] = useState('')
   const [promoError, setPromoError] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
@@ -70,14 +73,14 @@ export function CartContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
       {cartItems.length === 0 ? (
         <div className="text-center py-10 sm:py-16">
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-primary mb-3 sm:mb-4">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-primary mb-3 sm:mb-4">
             Your cart is empty
           </h2>
-          <p className="text-base text-foreground/70 mb-8">
+          <p className="text-sm sm:text-base text-foreground/70 mb-8">
             Explore our collection and add some items to get started.
           </p>
           <Link href="/products">
-            <Button className="px-8 py-3 text-base bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button className="px-8 py-3 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground">
               Continue Shopping
             </Button>
           </Link>
@@ -91,23 +94,33 @@ export function CartContent() {
                 key={`${item.id}-${item.size}-${item.color}`}
                 className="flex gap-3 sm:gap-4 border border-border rounded-lg p-3 sm:p-4 bg-background"
               >
-                {/* Item Image Placeholder */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                  <div className="text-center text-muted-foreground text-sm">
-                    <p>Product</p>
-                    <p>Image</p>
-                  </div>
+                {/* Item Image (from database) */}
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {productImages[item.id] ? (
+                    <Image
+                      src={productImages[item.id]}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                    />
+                  ) : (
+                    <div className="text-center text-muted-foreground text-xs sm:text-sm">
+                      <p>Product</p>
+                      <p>Image</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Item Details */}
                 <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
-                  <h3 className="font-serif font-bold text-primary text-lg sm:text-xl truncate">
+                  <h3 className="font-serif font-bold text-primary text-base sm:text-lg lg:text-xl truncate">
                     {item.name}
                   </h3>
-                  <p className="text-base text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Size: <span className="font-medium text-foreground">{item.size}</span> • Color: <span className="font-medium text-foreground">{item.color}</span>
                   </p>
-                  <p className="text-xl font-bold text-foreground">
+                  <p className="text-base sm:text-lg font-bold text-foreground">
                     {formatPrice(item.price * item.quantity)}
                   </p>
 
@@ -121,7 +134,7 @@ export function CartContent() {
                     >
                       <Minus size={18} />
                     </button>
-                    <span className="w-8 text-center text-base font-medium">{item.quantity}</span>
+                    <span className="w-8 text-center text-sm sm:text-base font-medium">{item.quantity}</span>
                     <button
                       type="button"
                       onClick={() => updateQuantity(`${item.id}-${item.size}-${item.color}`, 1)}
@@ -149,13 +162,13 @@ export function CartContent() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="border border-border rounded-lg p-4 sm:p-6 bg-secondary space-y-4 sm:space-y-6 sticky top-20">
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-primary">Order Summary</h3>
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-serif font-bold text-primary">Order Summary</h3>
 
               {/* Promo code */}
               <div className="space-y-2">
                 {appliedPromo ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background/50 px-3 py-2">
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-xs sm:text-sm font-medium text-foreground">
                       <Tag size={14} className="inline mr-1.5 text-primary" />
                       {appliedPromo.code}
                       {appliedPromo.discount_type === 'percent'
@@ -178,7 +191,7 @@ export function CartContent() {
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                       placeholder="Promo code"
-                      className="flex-1 min-h-[44px] px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
+                      className="flex-1 min-h-[44px] px-3 py-2 border border-border rounded-lg bg-background text-foreground text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
                       disabled={promoLoading}
                     />
                     <Button
@@ -192,11 +205,11 @@ export function CartContent() {
                     </Button>
                   </div>
                 )}
-                {promoError && <p className="text-sm text-destructive">{promoError}</p>}
+                {promoError && <p className="text-xs sm:text-sm text-destructive">{promoError}</p>}
               </div>
 
               {/* Summary Details */}
-              <div className="space-y-4 border-b border-border pb-4 text-base">
+              <div className="space-y-4 border-b border-border pb-4 text-sm sm:text-base">
                 <div className="flex justify-between text-foreground/80">
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
@@ -224,21 +237,21 @@ export function CartContent() {
               </div>
 
               {/* Total */}
-              <div className="flex justify-between text-xl">
+              <div className="flex justify-between text-base sm:text-xl">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="font-bold text-primary text-2xl">{formatPrice(total)}</span>
+                <span className="font-bold text-primary text-lg sm:text-2xl">{formatPrice(total)}</span>
               </div>
 
               {/* Checkout Button */}
               <Link href="/checkout" className="block w-full">
-                <Button className="w-full min-h-[44px] py-3 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold touch-manipulation">
+                <Button className="w-full min-h-[44px] py-3 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold touch-manipulation">
                   Proceed to Checkout
                 </Button>
               </Link>
 
               {/* Continue Shopping */}
               <Link href="/products" className="block text-center">
-                <button className="w-full py-2.5 text-base text-primary hover:underline font-medium">
+                <button className="w-full py-2.5 text-sm sm:text-base text-primary hover:underline font-medium">
                   Continue Shopping
                 </button>
               </Link>
@@ -246,7 +259,7 @@ export function CartContent() {
               {/* Info Messages */}
               {subtotal < freeShippingThreshold && (
                 <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
-                  <p className="text-base text-foreground">
+                  <p className="text-xs sm:text-sm text-foreground">
                     <span className="font-medium">Free shipping</span> for orders over Rs. 5,000
                   </p>
                 </div>

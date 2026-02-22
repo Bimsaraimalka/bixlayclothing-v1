@@ -289,6 +289,150 @@ export async function fetchProductById(id: string): Promise<AdminProduct | null>
   return data ? toAdminProduct(data as ProductRow) : null
 }
 
+/** Fetches product image URLs from DB for given product IDs. Returns id -> first image URL. */
+export async function fetchProductImageUrls(ids: string[]): Promise<Record<string, string>> {
+  const unique = [...new Set(ids.filter(Boolean))]
+  if (unique.length === 0) return {}
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, image_urls')
+    .in('id', unique)
+  if (error) throw error
+  const map: Record<string, string> = {}
+  for (const row of (data ?? []) as { id: number; image_urls?: unknown }[]) {
+    const urls = parseJsonStringArray(row.image_urls)
+    if (urls[0]) map[String(row.id)] = urls[0]
+  }
+  return map
+}
+
+/** Cart item shape for logged-in user cart (synced across devices). */
+export type DbCartItem = {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  size: string
+  color: string
+}
+
+type CartItemRow = {
+  id: number
+  user_id: string
+  product_id: string
+  product_name: string
+  size: string
+  color: string
+  quantity: number
+  price: number
+}
+
+function toDbCartItem(r: CartItemRow): DbCartItem {
+  return {
+    id: String(r.product_id),
+    name: r.product_name ?? '',
+    price: Number(r.price),
+    quantity: Number(r.quantity),
+    size: r.size ?? '',
+    color: r.color ?? '',
+  }
+}
+
+/** Fetch cart items for the currently authenticated user. Returns [] if not logged in or on error. */
+export async function fetchCartItems(): Promise<DbCartItem[]> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.id) return []
+  const { data, error } = await supabase
+    .from('cart_items')
+    .select('id, user_id, product_id, product_name, size, color, quantity, price')
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: true })
+  if (error) return []
+  return (data ?? []).map((r) => toDbCartItem(r as CartItemRow))
+}
+
+/** Add or update cart line for authenticated user. Merges quantity if line exists. */
+export async function addCartItem(item: { id: string; name: string; price: number; size: string; color: string; quantity?: number }): Promise<{ error: string | null }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.id) return { error: 'Not logged in' }
+  const qty = Math.max(1, item.quantity ?? 1)
+  const { data: existing } = await supabase
+    .from('cart_items')
+    .select('id, quantity')
+    .eq('user_id', user.id)
+    .eq('product_id', item.id)
+    .eq('size', item.size ?? '')
+    .eq('color', item.color ?? '')
+    .maybeSingle()
+  if (existing) {
+    const { error } = await supabase
+      .from('cart_items')
+      .update({ quantity: (existing as { quantity: number }).quantity + qty })
+      .eq('id', (existing as { id: number }).id)
+    return error ? { error: error.message } : { error: null }
+  }
+  const { error } = await supabase.from('cart_items').insert({
+    user_id: user.id,
+    product_id: item.id,
+    product_name: item.name,
+    size: item.size ?? '',
+    color: item.color ?? '',
+    quantity: qty,
+    price: item.price,
+  })
+  return error ? { error: error.message } : { error: null }
+}
+
+/** Update quantity for one cart line. Line key = product_id-size-color. */
+export async function updateCartItemQuantity(productId: string, size: string, color: string, delta: number): Promise<{ error: string | null }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.id) return { error: 'Not logged in' }
+  const { data: row } = await supabase
+    .from('cart_items')
+    .select('id, quantity')
+    .eq('user_id', user.id)
+    .eq('product_id', productId)
+    .eq('size', size ?? '')
+    .eq('color', color ?? '')
+    .maybeSingle()
+  if (!row) return { error: null }
+  const current = (row as { quantity: number }).quantity
+  const next = Math.max(1, current + delta)
+  const { error } = await supabase
+    .from('cart_items')
+    .update({ quantity: next })
+    .eq('id', (row as { id: number }).id)
+  return error ? { error: error.message } : { error: null }
+}
+
+/** Remove one line from cart. */
+export async function removeCartItem(productId: string, size: string, color: string): Promise<{ error: string | null }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.id) return { error: 'Not logged in' }
+  const { error } = await supabase
+    .from('cart_items')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('product_id', productId)
+    .eq('size', size ?? '')
+    .eq('color', color ?? '')
+  return error ? { error: error.message } : { error: null }
+}
+
+/** Clear all cart items for the current user. */
+export async function clearCartItems(): Promise<{ error: string | null }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.id) return { error: 'Not logged in' }
+  const { error } = await supabase.from('cart_items').delete().eq('user_id', user.id)
+  return error ? { error: error.message } : { error: null }
+}
+
 export async function fetchOrders(): Promise<AdminOrder[]> {
   const supabase = createClient()
   const { data, error } = await supabase
