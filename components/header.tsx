@@ -114,7 +114,7 @@ export const Header = () => {
                   e.stopPropagation()
                   setSearchOpen(true)
                 }}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                className="min-w-[44px] min-h-[44px] p-2 hover:bg-secondary rounded-lg transition-colors flex items-center justify-center touch-manipulation"
                 aria-label="Open search"
               >
                 <Search size={20} className="text-primary" />
@@ -143,7 +143,7 @@ export const Header = () => {
                       <button
                         type="button"
                         onClick={() => setSearchOpen(false)}
-                        className="p-2 md:p-1.5 hover:bg-secondary rounded transition-colors touch-manipulation"
+                        className="min-w-[44px] min-h-[44px] p-2 md:p-1.5 hover:bg-secondary rounded transition-colors touch-manipulation flex items-center justify-center"
                         aria-label="Close search"
                       >
                         <X size={20} className="md:w-[18px] md:h-[18px] text-muted-foreground" />
@@ -200,7 +200,7 @@ export const Header = () => {
                 {user ? (
                   <Link
                     href="/account"
-                    className="p-2 hover:bg-secondary rounded-lg transition-colors flex items-center gap-1.5 text-foreground"
+                    className="min-w-[44px] min-h-[44px] p-2 hover:bg-secondary rounded-lg transition-colors flex items-center justify-center gap-1.5 text-foreground touch-manipulation"
                     aria-label="My account"
                   >
                     <User size={20} className="text-primary" />
@@ -227,7 +227,7 @@ export const Header = () => {
             <button
               type="button"
               onClick={openCart}
-              className="relative p-2 hover:bg-secondary rounded-lg transition-colors"
+              className="relative min-w-[44px] min-h-[44px] p-2 hover:bg-secondary rounded-lg transition-colors flex items-center justify-center touch-manipulation"
               aria-label="Open cart"
             >
               <ShoppingCart size={20} className="text-primary" />
@@ -236,10 +236,10 @@ export const Header = () => {
               </span>
             </button>
             <details ref={mobileMenuRef} className="md:hidden group">
-              <summary className="list-none p-2 hover:bg-secondary rounded-lg transition-colors cursor-pointer">
+              <summary className="list-none min-w-[44px] min-h-[44px] p-2 hover:bg-secondary rounded-lg transition-colors cursor-pointer flex items-center justify-center touch-manipulation">
                 <Menu size={20} className="text-primary" />
               </summary>
-              <nav className="absolute top-16 right-0 bg-background border border-border rounded-lg shadow-lg p-4 min-w-48">
+              <nav className="absolute top-full right-0 mt-1 mr-0 sm:mr-2 bg-background border border-border rounded-lg shadow-lg p-2 min-w-[200px] max-w-[min(280px,calc(100vw-2rem))]">
                 <button
                   type="button"
                   onClick={() => {

@@ -77,7 +77,8 @@ export function CartDrawer() {
       />
       {/* Drawer */}
       <div
-        className="fixed top-0 right-0 h-full w-full max-w-sm sm:max-w-md bg-background border-l border-border shadow-xl z-50 flex flex-col transition-transform duration-300 ease-out animate-in slide-in-from-right"
+        className="fixed top-0 right-0 h-full w-full max-w-[100vw] sm:max-w-md bg-background border-l border-border shadow-xl z-50 flex flex-col transition-transform duration-300 ease-out animate-in slide-in-from-right"
+        style={{ paddingRight: 'max(env(safe-area-inset-right), 0px)' }}
         role="dialog"
         aria-label="Shopping cart"
       >
@@ -169,7 +170,7 @@ export function CartDrawer() {
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-border p-4 space-y-3">
+          <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] space-y-3">
             {/* Promo code */}
             <div className="space-y-1.5">
               {appliedPromo ? (
@@ -197,14 +198,14 @@ export function CartDrawer() {
                     value={promoInput}
                     onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                     placeholder="Promo code"
-                    className="flex-1 min-h-[40px] px-2.5 py-2 border border-border rounded-lg bg-background text-foreground text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
+                    className="flex-1 min-h-[44px] px-2.5 py-2 border border-border rounded-lg bg-background text-foreground text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
                     disabled={promoLoading}
                   />
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="min-h-[40px] shrink-0 touch-manipulation"
+                    className="min-h-[44px] shrink-0 touch-manipulation"
                     onClick={handleApplyPromo}
                     disabled={promoLoading || !promoInput.trim()}
                   >

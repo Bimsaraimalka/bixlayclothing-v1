@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/product-card'
 import type { ProductCardProduct } from '@/components/product-card'
 import { useStoreProducts } from '@/hooks/use-store-products'
 import { LoadingScreen } from '@/components/loading-screen'
+import type { ProductSegment } from '@/lib/admin-data'
 
 function toCardProduct(p: {
   id: string
@@ -35,83 +36,64 @@ function toCardProduct(p: {
   }
 }
 
-/** Repeat items so the mobile strip has enough cards to scroll (loop feel when few items). */
-function loopItems<T>(items: T[], minTotal: number): T[] {
-  if (items.length === 0) return []
-  const out: T[] = []
-  while (out.length < minTotal) {
-    for (const item of items) out.push(item)
-  }
-  return out
+const SEGMENT_CONFIG: Record<ProductSegment, { title: string; href: string; linkText: string }> = {
+  Men: { title: "Men's", href: '/men', linkText: "Shop Men's" },
+  Women: { title: "Women's", href: '/women', linkText: "Shop Women's" },
+  Unisex: { title: 'Unisex', href: '/products', linkText: 'Shop all' },
 }
 
-const MOBILE_STRIP_MIN_CARDS = 12
+type HomeSegmentSectionProps = {
+  segment: 'Men' | 'Women'
+  /** Optional alternate background (e.g. bg-secondary) */
+  className?: string
+}
 
-export const FeaturedProducts = () => {
+export function HomeSegmentSection({ segment, className = '' }: HomeSegmentSectionProps) {
   const { products, loading, error } = useStoreProducts()
-  const newArrivals = products.filter((p) => p.new_arrival === true).slice(0, 8)
-  const cardProducts = newArrivals.map(toCardProduct)
-  const mobileStripCards = loopItems(cardProducts, MOBILE_STRIP_MIN_CARDS)
-  /** Two identical halves for seamless CSS infinite scroll (0 → -50%) */
-  const mobileStripAnimated = [...mobileStripCards, ...mobileStripCards]
+  const config = SEGMENT_CONFIG[segment]
+  const filtered =
+    segment === 'Men'
+      ? products.filter((p) => p.segment === 'Men' || p.segment === 'Unisex')
+      : products.filter((p) => p.segment === 'Women' || p.segment === 'Unisex')
+  const displayProducts = filtered.slice(0, 8)
+  const cardProducts = displayProducts.map(toCardProduct)
 
   return (
-    <section className="w-full py-12 sm:py-16 lg:py-20 bg-white">
+    <section className={`w-full py-10 sm:py-16 lg:py-20 ${className || 'bg-white'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 sm:mb-12">
+        <div className="text-center mb-6 sm:mb-12">
           <p className="font-serif text-foreground/60 text-xs sm:text-sm uppercase tracking-[0.2em] mb-1.5 sm:mb-2">
             Bixlay
           </p>
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-primary uppercase tracking-tight">
-            New Arrivals
+            {config.title}
           </h2>
         </div>
 
         {loading ? (
           <LoadingScreen variant="productGrid" className="py-4" />
         ) : error ? (
-          <p className="text-center py-12 text-destructive text-sm">{error}</p>
+          <p className="text-center py-12 text-destructive text-xs sm:text-sm">{error}</p>
         ) : cardProducts.length > 0 ? (
           <>
-            {/* Mobile: CSS animate scroll – seamless loop, no white, slow scroll */}
-            <div className="sm:hidden -mx-4 overflow-hidden">
-              <div
-                className="flex gap-3 pb-2 w-max shrink-0"
-                style={{
-                  width: 'max-content',
-                  animation: 'var(--animate-new-arrivals-scroll)',
-                }}
-              >
-                {mobileStripAnimated.map((product, index) => (
-                  <ProductCard
-                    key={`${product.id}-${index}`}
-                    product={product}
-                    variant="compact"
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Desktop: grid */}
-            <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {cardProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-
-            <div className="text-center mt-10 sm:mt-14">
+            <div className="text-center mt-8 sm:mt-14">
               <Link
-                href="/new-arrivals"
+                href={config.href}
                 className="inline-flex items-center justify-center gap-2 text-primary font-semibold hover:underline text-xs sm:text-sm uppercase tracking-wide min-h-[44px] px-5 py-3 touch-manipulation"
               >
-                View all new arrivals
+                {config.linkText}
                 <span>→</span>
               </Link>
             </div>
           </>
         ) : (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-sm sm:text-base mb-4">No new arrivals yet.</p>
+            <p className="text-muted-foreground text-sm sm:text-base mb-4">No {config.title.toLowerCase()} products yet.</p>
             <Link
               href="/products"
               className="inline-flex items-center justify-center gap-2 text-primary font-semibold hover:underline text-xs sm:text-sm uppercase tracking-wide min-h-[44px] px-5 py-3 touch-manipulation"

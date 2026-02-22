@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Hero } from '@/components/hero'
 import { FeaturedProducts } from '@/components/featured-products'
+import { HomeSegmentSection } from '@/components/home-segment-section'
 import { Newsletter } from '@/components/newsletter'
 import { Footer } from '@/components/footer'
 import { SITE_NAME, SITE_DESCRIPTION, BASE_URL } from '@/lib/site'
@@ -50,6 +51,8 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <FeaturedProducts />
+        <HomeSegmentSection segment="Men" className="bg-secondary" />
+        <HomeSegmentSection segment="Women" />
         <Newsletter />
       </main>
       <Footer />
