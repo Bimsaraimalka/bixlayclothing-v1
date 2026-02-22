@@ -18,10 +18,10 @@ type LoadingScreenProps = {
 /** Animated loading dots for "Loading..." text */
 function LoadingDots() {
   return (
-    <span className="inline-flex gap-1 text-muted-foreground" aria-hidden>
-      <span className="size-1.5 rounded-full bg-current animate-loading-dot opacity-70" />
-      <span className="size-1.5 rounded-full bg-current [animation-delay:0.2s] animate-loading-dot opacity-70" />
-      <span className="size-1.5 rounded-full bg-current [animation-delay:0.4s] animate-loading-dot opacity-70" />
+    <span className="inline-flex gap-1" aria-hidden>
+      <span className="size-1.5 rounded-full bg-current animate-loading-dot" />
+      <span className="size-1.5 rounded-full bg-current [animation-delay:0.2s] animate-loading-dot" />
+      <span className="size-1.5 rounded-full bg-current [animation-delay:0.4s] animate-loading-dot" />
     </span>
   )
 }
@@ -35,7 +35,7 @@ export function LoadingScreen({
     return (
       <div
         className={cn(
-          'grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in duration-300',
+          'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in duration-300',
           className
         )}
         aria-busy="true"
@@ -109,7 +109,7 @@ export function LoadingScreen({
       aria-label={message ?? 'Loading'}
     >
       <Loader2
-        className="size-10 text-muted-foreground animate-spin"
+        className="size-10 text-primary animate-spin"
         strokeWidth={1.5}
         aria-hidden
       />

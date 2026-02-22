@@ -16,14 +16,7 @@ const PRICE_OPTIONS = [
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const
 const COLORS = ['Black', 'White', 'Navy', 'Gray', 'Red', 'Blue', 'Pink', 'Beige'] as const
 
-type ProductFilterProps = {
-  /** Called when a filter is applied (e.g. to close mobile sheet) */
-  onApply?: () => void
-  /** Compact layout for mobile sheet */
-  compact?: boolean
-}
-
-export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
+export function ProductFilter() {
   const [expandedSection, setExpandedSection] = useState<string | null>('category')
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -52,13 +45,10 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
 
   const hasActiveFilters = !!(currentCategory || currentPrice || currentSize || currentColor)
 
-  const sectionClass = compact ? 'border-b border-border pb-3' : 'border-b border-border pb-4 sm:pb-6'
-  const itemClass = compact ? 'py-2 min-h-[40px]' : 'py-2.5 min-h-[44px]'
-
   return (
-    <div className={compact ? 'space-y-2' : 'space-y-4 sm:space-y-6'}>
+    <div className="space-y-4 sm:space-y-6">
       {/* Category Filter */}
-      <div className={sectionClass}>
+      <div className="border-b border-border pb-4 sm:pb-6">
         <button
           type="button"
           onClick={() => toggleSection('category')}
@@ -71,7 +61,7 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
           />
         </button>
         {expandedSection === 'category' && (
-          <div className={compact ? 'mt-2 space-y-0' : 'mt-4 space-y-3'}>
+          <div className="mt-4 space-y-3">
             {loading ? (
               <p className="text-xs text-muted-foreground">Loading…</p>
             ) : categories.length === 0 ? (
@@ -81,8 +71,7 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
                 <Link
                   key={category}
                   href={buildUrl({ category: currentCategory === category ? '' : category })}
-                  onClick={onApply}
-                  className={`flex items-center gap-3 cursor-pointer group block touch-manipulation ${itemClass} ${currentCategory === category ? 'font-medium text-primary' : ''}`}
+                  className={`flex items-center gap-3 cursor-pointer group block py-2.5 min-h-[44px] touch-manipulation ${currentCategory === category ? 'font-medium text-primary' : ''}`}
                 >
                   <span className="text-xs text-foreground group-hover:text-primary transition-colors">
                     {category}
@@ -95,7 +84,7 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
       </div>
 
       {/* Price Filter */}
-      <div className={sectionClass}>
+      <div className="border-b border-border pb-4 sm:pb-6">
         <button
           type="button"
           onClick={() => toggleSection('price')}
@@ -108,13 +97,12 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
           />
         </button>
         {expandedSection === 'price' && (
-          <div className={compact ? 'mt-2 space-y-0' : 'mt-4 space-y-3'}>
+          <div className="mt-4 space-y-3">
             {PRICE_OPTIONS.map(({ label, value }) => (
               <Link
                 key={value}
                 href={buildUrl({ price: currentPrice === value ? '' : value })}
-                onClick={onApply}
-                className={`flex items-center gap-3 cursor-pointer group block touch-manipulation ${itemClass} ${currentPrice === value ? 'font-medium text-primary' : ''}`}
+                className={`flex items-center gap-3 cursor-pointer group block py-2.5 min-h-[44px] touch-manipulation ${currentPrice === value ? 'font-medium text-primary' : ''}`}
               >
                 <span className="text-xs text-foreground group-hover:text-primary transition-colors">
                   {label}
@@ -126,7 +114,7 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
       </div>
 
       {/* Size Filter */}
-      <div className={sectionClass}>
+      <div className="border-b border-border pb-4 sm:pb-6">
         <button
           type="button"
           onClick={() => toggleSection('size')}
@@ -139,13 +127,12 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
           />
         </button>
         {expandedSection === 'size' && (
-          <div className={compact ? 'mt-2 space-y-0' : 'mt-4 space-y-3'}>
+          <div className="mt-4 space-y-3">
             {SIZES.map((size) => (
               <Link
                 key={size}
                 href={buildUrl({ size: currentSize === size ? '' : size })}
-                onClick={onApply}
-                className={`flex items-center gap-3 cursor-pointer group block touch-manipulation ${itemClass} ${currentSize === size ? 'font-medium text-primary' : ''}`}
+                className={`flex items-center gap-3 cursor-pointer group block py-2.5 min-h-[44px] touch-manipulation ${currentSize === size ? 'font-medium text-primary' : ''}`}
               >
                 <span className="text-xs text-foreground group-hover:text-primary transition-colors">
                   {size}
@@ -157,7 +144,7 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
       </div>
 
       {/* Color Filter */}
-      <div className={compact ? 'pb-3' : 'pb-4 sm:pb-6'}>
+      <div className="pb-4 sm:pb-6">
         <button
           type="button"
           onClick={() => toggleSection('color')}
@@ -170,13 +157,12 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
           />
         </button>
         {expandedSection === 'color' && (
-          <div className={compact ? 'mt-2 space-y-0' : 'mt-4 space-y-3'}>
+          <div className="mt-4 space-y-3">
             {COLORS.map((color) => (
               <Link
                 key={color}
                 href={buildUrl({ color: currentColor === color ? '' : color })}
-                onClick={onApply}
-                className={`flex items-center gap-3 cursor-pointer group block touch-manipulation ${itemClass} ${currentColor === color ? 'font-medium text-primary' : ''}`}
+                className={`flex items-center gap-3 cursor-pointer group block py-2.5 min-h-[44px] touch-manipulation ${currentColor === color ? 'font-medium text-primary' : ''}`}
               >
                 <span className="text-xs text-foreground group-hover:text-primary transition-colors">
                   {color}
@@ -191,7 +177,6 @@ export function ProductFilter({ onApply, compact }: ProductFilterProps = {}) {
       {hasActiveFilters && (
         <Link
           href={basePath}
-          onClick={onApply}
           className="w-full min-h-[44px] py-2.5 sm:py-3 px-4 rounded-lg border border-border text-primary font-medium hover:bg-secondary transition-colors text-sm sm:text-base block text-center touch-manipulation flex items-center justify-center"
         >
           Clear Filters

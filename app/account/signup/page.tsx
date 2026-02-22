@@ -62,7 +62,7 @@ export default function SignUpPage() {
               <p className="text-foreground">
                 Account created. Check your email to confirm your address, or sign in below if confirmation is disabled.
               </p>
-              <Button asChild className="w-full min-h-[44px] bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button asChild className="w-full min-h-[44px]">
                 <Link href="/account/login">Sign in</Link>
               </Button>
             </div>
@@ -127,7 +127,7 @@ export default function SignUpPage() {
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" disabled={submitting} className="w-full min-h-[44px] touch-manipulation bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button type="submit" disabled={submitting} className="w-full min-h-[44px] touch-manipulation">
                 {submitting ? 'Creating account…' : 'Create account'}
               </Button>
             </form>

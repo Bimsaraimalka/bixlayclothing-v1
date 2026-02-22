@@ -111,8 +111,7 @@ export function AdminProducts() {
   }
 
   const filtered = products.filter((p) => {
-    const q = search.trim().toLowerCase()
-    const matchSearch = !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase())
     let matchCat = true
     if (categoryFilter === 'All') matchCat = true
     else if (categoryFilter === 'Men' || categoryFilter === 'Women') matchCat = p.segment === categoryFilter || p.segment === 'Unisex'
@@ -838,7 +837,7 @@ export function AdminProducts() {
       <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="text"
-          placeholder="Search by name or ID..."
+          placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 min-h-[44px] px-4 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base sm:text-sm touch-manipulation"

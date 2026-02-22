@@ -1,7 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 export interface CartItem {
   id: string
@@ -10,8 +9,6 @@ export interface CartItem {
   quantity: number
   size: string
   color: string
-  /** Product image URL for cart display */
-  imageUrl?: string
 }
 
 export interface AppliedPromo {
@@ -85,32 +82,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([])
     setAppliedPromo(null)
-  }, [])
-
-  // Subscribe to realtime product price changes from admin
-  useEffect(() => {
-    const supabase = createClient()
-    const channel = supabase
-      .channel('cart-product-prices')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'products' },
-        (payload) => {
-          const newRow = payload.new as { id?: number; price?: number }
-          if (newRow?.id != null && typeof newRow.price === 'number') {
-            const productId = String(newRow.id)
-            setItems((prev) =>
-              prev.map((item) =>
-                item.id === productId ? { ...item, price: newRow.price! } : item
-              )
-            )
-          }
-        }
-      )
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
   }, [])
 
   return (

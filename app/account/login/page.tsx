@@ -78,7 +78,7 @@ function LoginForm() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={submitting} className="w-full min-h-[44px] touch-manipulation bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button type="submit" disabled={submitting} className="w-full min-h-[44px] touch-manipulation">
               {submitting ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>

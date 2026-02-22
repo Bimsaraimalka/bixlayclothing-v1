@@ -21,10 +21,9 @@ export type ProductCardProduct = {
 
 type ProductCardProps = {
   product: ProductCardProduct
-  size?: 'default' | 'compact'
 }
 
-export function ProductCard({ product, size = 'default' }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const hasSinglePrice = 'price' in product && product.price != null
   const showBeforeNow =
     hasSinglePrice &&
@@ -38,18 +37,8 @@ export function ProductCard({ product, size = 'default' }: ProductCardProps) {
     ? formatPrice(product.price!)
     : formatPrice(product.priceMin!)
 
-  const isCompact = size === 'compact'
-  const imageBadgeClass = isCompact ? 'top-2 left-2 h-6 min-w-[1.5rem] text-[10px] px-1.5 py-0.5 rounded-md' : 'top-4 left-4 h-8 min-w-[2rem] text-xs px-2.5 py-1.5 rounded-[10px]'
-  const soldOutBadgeClass = isCompact ? 'top-2 left-9 h-6 min-w-[3rem] text-[10px] px-2 py-0.5 rounded-md' : 'top-4 left-[4.5rem] h-8 min-w-[4.5rem] text-xs px-3 py-1.5 rounded-[10px]'
-  const topSellingBadgeClass = isCompact ? 'top-2 right-2 h-6 min-w-[3rem] text-[10px] px-2 py-0.5 rounded-md' : 'top-4 right-4 h-8 min-w-[4.5rem] text-xs px-3 py-1.5 rounded-[10px]'
-  const discountBadgeClass = isCompact ? 'bottom-2 right-2 h-6 min-w-[2rem] text-[10px] px-1.5 py-0.5 rounded-md' : 'bottom-4 right-4 h-8 min-w-[2.5rem] text-xs px-2.5 py-1.5 rounded-[10px]'
-  const infoPadding = isCompact ? 'p-2 space-y-0' : 'p-3 sm:p-4 space-y-0.5 sm:space-y-1'
-  const titleClass = isCompact ? 'text-xs font-medium leading-tight line-clamp-2' : 'text-sm sm:text-base font-medium leading-snug'
-  const categoryClass = isCompact ? 'text-[10px]' : 'text-[11px] sm:text-xs'
-  const priceClass = isCompact ? 'text-xs pt-0.5' : 'text-xs sm:text-sm pt-0.5 sm:pt-1'
-
   return (
-    <div className={`group bg-card rounded-lg border border-border shadow-sm overflow-hidden transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1 hover:border-primary/20 ${isCompact ? 'hover:-translate-y-0.5' : ''}`}>
+    <div className="group bg-card rounded-lg border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       <Link href={`/products/${product.id}`} className="block">
         {/* Image area with badges */}
         <div className="relative aspect-square bg-muted overflow-hidden">
@@ -58,7 +47,7 @@ export function ProductCard({ product, size = 'default' }: ProductCardProps) {
             <img
               src={product.imageUrl}
               alt=""
-              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+              className="w-full h-full object-cover"
               width={400}
               height={400}
             />
@@ -68,36 +57,36 @@ export function ProductCard({ product, size = 'default' }: ProductCardProps) {
             </div>
           )}
           {product.isNew && (
-            <span className={`absolute flex items-center justify-center bg-primary text-primary-foreground font-medium uppercase ${imageBadgeClass}`}>
+            <span className="absolute top-4 left-4 flex h-8 min-w-[2rem] items-center justify-center rounded-[10px] bg-primary text-primary-foreground text-xs font-medium uppercase px-2.5 py-1.5">
               New
             </span>
           )}
           {product.soldOut && (
-            <span className={`absolute flex items-center justify-center bg-primary text-primary-foreground font-medium uppercase ${soldOutBadgeClass}`}>
+            <span className="absolute top-4 left-[4.5rem] flex h-8 min-w-[4.5rem] items-center justify-center rounded-[10px] bg-primary text-primary-foreground text-xs font-medium uppercase px-3 py-1.5">
               Sold out
             </span>
           )}
           {product.topSelling && (
-            <span className={`absolute flex items-center justify-center bg-accent text-white font-medium uppercase ${topSellingBadgeClass}`}>
+            <span className="absolute top-4 right-4 flex h-8 min-w-[4.5rem] items-center justify-center rounded-[10px] bg-accent text-white text-xs font-medium uppercase px-3 py-1.5">
               Top Selling
             </span>
           )}
           {discountPercent > 0 && (
-            <span className={`absolute flex items-center justify-center bg-destructive text-destructive-foreground font-bold ${discountBadgeClass}`}>
+            <span className="absolute bottom-4 right-4 flex h-8 min-w-[2.5rem] items-center justify-center rounded-[10px] bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1.5">
               -{discountPercent}%
             </span>
           )}
         </div>
 
         {/* Product info */}
-        <div className={`${infoPadding}`}>
-          <h3 className={`font-sans text-foreground ${titleClass}`}>
+        <div className="p-3 sm:p-4 space-y-0.5 sm:space-y-1">
+          <h3 className="font-sans font-medium text-foreground text-sm sm:text-base leading-snug">
             {product.name}
           </h3>
-          <p className={`${categoryClass} text-muted-foreground uppercase tracking-wide font-medium`}>
+          <p className="text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wide font-medium">
             {product.category}
           </p>
-          <p className={`font-sans font-bold text-foreground ${priceClass}`}>
+          <p className="font-sans font-bold text-foreground text-xs sm:text-sm pt-0.5 sm:pt-1">
             {showBeforeNow ? (
               <>
                 <span className="line-through text-muted-foreground font-normal mr-1.5">
