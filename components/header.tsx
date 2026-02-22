@@ -87,16 +87,14 @@ export const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            <Image
-              src="/bixlay-logo.png"
-              alt="Bixlay"
-              width={240}
-              height={48}
-              className="h-5 sm:h-6 w-auto object-contain"
-              quality={75}
-              priority
-              sizes="(max-width: 640px) 80px, 96px"
-            />
+  <Image
+  src="/bixlay-logo.png"
+  alt="Bixlay"
+  width={240}
+  height={48}
+  className="h-5 sm:h-6 w-auto object-contain"
+  priority
+  />
           </Link>
 
           {/* Desktop Navigation */}
