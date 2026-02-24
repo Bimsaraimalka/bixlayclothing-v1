@@ -5,7 +5,7 @@ import { AdminLayout } from '@/components/admin/admin-layout'
 import { useAdminAuth } from '@/components/admin/admin-auth-context'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Users, Trash2, Loader2 } from 'lucide-react'
+import { Users, Trash2, Loader2, Eye } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 type AdminProfile = { user_id: string; email: string; role: string; created_at: string }
 
@@ -29,6 +35,10 @@ export default function AdminTeamPage() {
   const [submitting, setSubmitting] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AdminProfile | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [detailTarget, setDetailTarget] = useState<AdminProfile | null>(null)
+  const [detailForm, setDetailForm] = useState({ email: '', role: 'admin' as 'owner' | 'admin' })
+  const [detailSaving, setDetailSaving] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
 
   useEffect(() => {
     if (role !== null && !isOwner) {
@@ -102,6 +112,39 @@ export default function AdminTeamPage() {
       setError('Failed to delete admin')
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const openDetail = (p: AdminProfile) => {
+    setDetailTarget(p)
+    setDetailForm({ email: p.email, role: p.role as 'owner' | 'admin' })
+    setDetailError(null)
+  }
+
+  const handleDetailSave = async () => {
+    if (!detailTarget) return
+    setDetailSaving(true)
+    setDetailError(null)
+    try {
+      const res = await fetch(`/api/admin/team/${detailTarget.user_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: detailForm.role, email: detailForm.email.trim() || undefined }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to update')
+      setList((prev) =>
+        prev.map((p) =>
+          p.user_id === detailTarget.user_id
+            ? { ...p, email: detailForm.email.trim() || p.email, role: detailForm.role }
+            : p
+        )
+      )
+      setDetailTarget((t) => (t ? { ...t, email: detailForm.email.trim() || t.email, role: detailForm.role } : null))
+    } catch (e) {
+      setDetailError(e instanceof Error ? e.message : 'Failed to update')
+    } finally {
+      setDetailSaving(false)
     }
   }
 
@@ -183,6 +226,15 @@ export default function AdminTeamPage() {
                     <p className="text-xs text-muted-foreground capitalize">{p.role}</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => openDetail(p)}
+                    >
+                      <Eye size={16} /> Details
+                    </Button>
                     <select
                       value={p.role}
                       onChange={(e) => handleRoleChange(p.user_id, e.target.value as 'owner' | 'admin')}
@@ -229,6 +281,57 @@ export default function AdminTeamPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!detailTarget} onOpenChange={(open) => !open && setDetailTarget(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Admin details</DialogTitle>
+          </DialogHeader>
+          {detailTarget && (
+            <div className="space-y-4">
+              {detailError && <p className="text-sm text-destructive">{detailError}</p>}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+                <input
+                  type="email"
+                  value={detailForm.email}
+                  onChange={(e) => setDetailForm((f) => ({ ...f, email: e.target.value }))}
+                  className="w-full min-h-[44px] px-4 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Role</label>
+                <select
+                  value={detailForm.role}
+                  onChange={(e) => setDetailForm((f) => ({ ...f, role: e.target.value as 'owner' | 'admin' }))}
+                  className="w-full min-h-[44px] px-4 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="owner">Owner</option>
+                </select>
+              </div>
+              <dl className="grid gap-1 text-sm">
+                <div>
+                  <dt className="text-muted-foreground">User ID</dt>
+                  <dd className="font-mono text-xs break-all">{detailTarget.user_id}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Added</dt>
+                  <dd>{detailTarget.created_at ? new Date(detailTarget.created_at).toLocaleString() : '—'}</dd>
+                </div>
+              </dl>
+              <Button
+                type="button"
+                onClick={handleDetailSave}
+                disabled={detailSaving}
+                className="w-full sm:w-auto"
+              >
+                {detailSaving ? <Loader2 size={16} className="animate-spin" /> : 'Save changes'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   )
 }

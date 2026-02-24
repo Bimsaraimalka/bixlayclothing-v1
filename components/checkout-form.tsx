@@ -307,6 +307,7 @@ export function CheckoutForm() {
                     <Building2 size={20} className="text-muted-foreground shrink-0" />
                     <span className="text-base font-medium">1. Bank transfer</span>
                   </label>
+                  {/* Payment option 2 (card) hidden for now
                   <label className="flex items-center gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
                     <input
                       type="radio"
@@ -319,6 +320,7 @@ export function CheckoutForm() {
                     <CreditCard size={20} className="text-muted-foreground shrink-0" />
                     <span className="text-base font-medium">2. Visa, Debit & Mastercard</span>
                   </label>
+                  */}
                   <label className="flex items-center gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
                     <input
                       type="radio"
@@ -329,7 +331,7 @@ export function CheckoutForm() {
                       className="w-5 h-5 text-primary border-border"
                     />
                     <Banknote size={20} className="text-muted-foreground shrink-0" />
-                    <span className="text-base font-medium">3. Cash on delivery</span>
+                    <span className="text-base font-medium">2. Cash on delivery</span>
                   </label>
                 </fieldset>
 

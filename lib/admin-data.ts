@@ -115,6 +115,10 @@ export type StoreSettings = {
   free_shipping_threshold: number
   tax_enabled: boolean
   tax_rate: number
+  /** Site contact phone (e.g. +94760272240). Shown when contact_phone_visible is true. */
+  contact_phone?: string | null
+  /** When true, show contact_phone on contact page and checkout success. */
+  contact_phone_visible?: boolean
 }
 
 /** Saved product template for quick-add when creating products. */

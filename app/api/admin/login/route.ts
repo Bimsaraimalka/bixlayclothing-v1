@@ -56,6 +56,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not an admin' }, { status: 401 })
     }
 
+    // Ensure owner@bixlay.com always has owner role (full settings & admin access)
+    const effectiveRole =
+      (authData.user.email ?? '').toLowerCase() === 'owner@bixlay.com'
+        ? 'owner'
+        : profile.role
+
     const secret = process.env.ADMIN_SESSION_SECRET
     if (!secret) {
       return NextResponse.json({ ok: true })
@@ -63,7 +69,7 @@ export async function POST(request: Request) {
 
     const exp = Math.floor(Date.now() / 1000) + COOKIE_MAX_AGE
     const cookieValue = signAdminSession(
-      { sub: authData.user.id, role: profile.role, exp },
+      { sub: authData.user.id, role: effectiveRole, exp },
       secret
     )
     const res = NextResponse.json({ ok: true })

@@ -10,7 +10,7 @@ type AdminAuthContextType = {
   role: AdminRole
   isOwner: boolean
   login: (email: string, password: string) => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null)
@@ -41,20 +41,23 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email: email.trim(), password }),
       })
       if (!res.ok) return false
+      setRole(null)
       setStoredAuth(true)
       setIsAuthenticated(true)
-      setRole(null)
       return true
     } catch {
       return false
     }
   }, [])
 
-  const logout = useCallback(() => {
-    fetch('/api/admin/logout', { method: 'POST' }).catch(() => {})
-    setStoredAuth(false)
-    setIsAuthenticated(false)
-    setRole(null)
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' })
+    } finally {
+      setStoredAuth(false)
+      setIsAuthenticated(false)
+      setRole(null)
+    }
   }, [])
 
   const value: AdminAuthContextType = {

@@ -542,6 +542,8 @@ type StoreSettingsRow = {
   free_shipping_threshold: number
   tax_enabled: boolean
   tax_rate: number
+  contact_phone?: string | null
+  contact_phone_visible?: boolean
   updated_at?: string
 }
 
@@ -549,7 +551,7 @@ export async function fetchStoreSettings(): Promise<StoreSettings | null> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('store_settings')
-    .select('default_shipping, free_shipping_threshold, tax_enabled, tax_rate')
+    .select('default_shipping, free_shipping_threshold, tax_enabled, tax_rate, contact_phone, contact_phone_visible')
     .eq('id', 1)
     .maybeSingle()
   if (error) return null
@@ -560,6 +562,8 @@ export async function fetchStoreSettings(): Promise<StoreSettings | null> {
     free_shipping_threshold: Number(r.free_shipping_threshold),
     tax_enabled: r.tax_enabled === true,
     tax_rate: Number(r.tax_rate),
+    contact_phone: r.contact_phone ?? null,
+    contact_phone_visible: r.contact_phone_visible === true,
   }
 }
 
@@ -570,6 +574,8 @@ export async function updateStoreSettingsSupabase(updates: Partial<StoreSettings
   if (updates.free_shipping_threshold !== undefined) payload.free_shipping_threshold = Math.max(0, updates.free_shipping_threshold)
   if (updates.tax_enabled !== undefined) payload.tax_enabled = updates.tax_enabled === true
   if (updates.tax_rate !== undefined) payload.tax_rate = Math.max(0, Math.min(1, updates.tax_rate))
+  if (updates.contact_phone !== undefined) payload.contact_phone = updates.contact_phone === '' ? null : updates.contact_phone
+  if (updates.contact_phone_visible !== undefined) payload.contact_phone_visible = updates.contact_phone_visible === true
   if (Object.keys(payload).length === 0) return
   payload.updated_at = new Date().toISOString()
   const { error } = await supabase.from('store_settings').update(payload).eq('id', 1)

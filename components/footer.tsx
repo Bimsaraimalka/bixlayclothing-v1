@@ -47,7 +47,6 @@ export const Footer = () => {
                   Men
                 </Link>
               </li>
-              <li className="py-1.5 border-t border-primary-foreground/20 my-1.5" aria-hidden />
               <li>
                 <Link href="/women" className="block py-3 min-h-[44px] flex items-center -my-1 hover:opacity-100 transition-opacity touch-manipulation">
                   Women

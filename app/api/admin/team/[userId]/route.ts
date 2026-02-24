@@ -23,13 +23,26 @@ export async function PATCH(
   const { userId } = await params
   const body = await request.json().catch(() => ({}))
   const role = body.role === 'owner' || body.role === 'admin' ? body.role : undefined
-  if (!role) return NextResponse.json({ error: 'role required (owner or admin)' }, { status: 400 })
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : undefined
+  if (!role && email === undefined) {
+    return NextResponse.json({ error: 'Provide role and/or email to update' }, { status: 400 })
+  }
   const supabase = createServiceRoleClient()
-  const { error } = await supabase
-    .from('admin_profiles')
-    .update({ role })
-    .eq('user_id', userId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (role !== undefined) {
+    const { error } = await supabase
+      .from('admin_profiles')
+      .update({ role })
+      .eq('user_id', userId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (email !== undefined && email !== '') {
+    const { error: authError } = await supabase.auth.admin.updateUserById(userId, { email })
+    if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
+    await supabase.from('admin_profiles').update({ email }).eq('user_id', userId)
+  }
+
   return NextResponse.json({ ok: true })
 }
 
