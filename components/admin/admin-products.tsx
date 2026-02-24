@@ -69,6 +69,7 @@ const emptyForm = () => ({
   promo_code: '',
   image_urls: [] as string[],
   details: '',
+  benefits: '',
 })
 
 export function AdminProducts() {
@@ -87,7 +88,7 @@ export function AdminProducts() {
   const handleDownloadProductsCsv = () => {
     const headers = [
       'ID', 'Name', 'Category', 'Price', 'Stock', 'Status', 'Colors', 'Sizes',
-      'Unisex', 'Segment', 'New arrival', 'Discount %', 'Promo code', 'Image URLs', 'Details',
+      'Unisex', 'Segment', 'New arrival', 'Discount %', 'Promo code', 'Image URLs', 'Details', 'Benefits',
     ]
     const rows = products.map((p) => [
       p.id,
@@ -105,6 +106,7 @@ export function AdminProducts() {
       p.promo_code ?? '',
       (p.image_urls ?? []).join('; '),
       (p.details ?? []).join('; '),
+      (p.benefits ?? []).map((b) => (b.description ? `${b.title} | ${b.description}` : b.title)).join('; '),
     ])
     const csv = buildCsv(headers, rows)
     downloadCsv(csv, `products-${new Date().toISOString().slice(0, 10)}.csv`)
@@ -141,6 +143,7 @@ export function AdminProducts() {
       promo_code: product.promo_code ?? '',
       image_urls: product.image_urls ?? [],
       details: (product.details ?? []).join('\n'),
+      benefits: (product.benefits ?? []).map((b) => (b.description ? `${b.title} | ${b.description}` : b.title)).join('\n'),
     })
   }
 
@@ -176,6 +179,21 @@ export function AdminProducts() {
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean)
+    const benefits = form.benefits
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const pipeIdx = line.indexOf('|')
+        const colonIdx = line.indexOf(': ')
+        if (pipeIdx >= 0) {
+          return { title: line.slice(0, pipeIdx).trim() || 'Benefit', description: line.slice(pipeIdx + 1).trim() || undefined }
+        }
+        if (colonIdx >= 0) {
+          return { title: line.slice(0, colonIdx).trim() || 'Benefit', description: line.slice(colonIdx + 2).trim() || undefined }
+        }
+        return { title: line, description: undefined }
+      })
     setAddSubmitting(true)
     try {
       await addProduct({
@@ -192,6 +210,7 @@ export function AdminProducts() {
         promo_code: promoCode,
         image_urls: form.image_urls,
         details,
+        benefits,
       })
       setForm(emptyForm())
       setAddOpen(false)
@@ -216,6 +235,25 @@ export function AdminProducts() {
       .filter(Boolean)
     const discountPercent = editForm.discount_percent.trim() ? Math.min(100, Math.max(0, parseFloat(editForm.discount_percent) || 0)) : null
     const promoCode = editForm.promo_code.trim() || null
+    const details = editForm.details
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const benefits = editForm.benefits
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const pipeIdx = line.indexOf('|')
+        const colonIdx = line.indexOf(': ')
+        if (pipeIdx >= 0) {
+          return { title: line.slice(0, pipeIdx).trim() || 'Benefit', description: line.slice(pipeIdx + 1).trim() || undefined }
+        }
+        if (colonIdx >= 0) {
+          return { title: line.slice(0, colonIdx).trim() || 'Benefit', description: line.slice(colonIdx + 2).trim() || undefined }
+        }
+        return { title: line, description: undefined }
+      })
     setEditSubmitting(true)
     try {
       await updateProduct(editingProduct.id, {
@@ -231,10 +269,8 @@ export function AdminProducts() {
         discount_percent: discountPercent,
         promo_code: promoCode,
         image_urls: editForm.image_urls,
-        details: editForm.details
-          .split('\n')
-          .map((s) => s.trim())
-          .filter(Boolean),
+        details,
+        benefits,
       })
       setEditingProduct(null)
     } finally {
@@ -442,6 +478,17 @@ export function AdminProducts() {
                   value={form.details}
                   onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))}
                   placeholder="Premium materials&#10;Comfortable fit&#10;Quality craftsmanship"
+                  rows={3}
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation resize-y"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Benefits / policy highlights (optional)</label>
+                <p className="text-xs text-muted-foreground mb-1">One per line. Use &quot;Title | Description&quot; or &quot;Title: Description&quot;. Example: Free Shipping | On orders over Rs. 5,000</p>
+                <textarea
+                  value={form.benefits}
+                  onChange={(e) => setForm((f) => ({ ...f, benefits: e.target.value }))}
+                  placeholder="Free Shipping | On orders over Rs. 5,000&#10;Easy Returns | 30-day return policy"
                   rows={3}
                   className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation resize-y"
                 />
@@ -733,6 +780,17 @@ export function AdminProducts() {
                     value={editForm.details}
                     onChange={(e) => setEditForm((f) => ({ ...f, details: e.target.value }))}
                     placeholder="One line per bullet"
+                    rows={3}
+                    className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation resize-y"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Benefits / policy highlights (optional)</label>
+                  <p className="text-xs text-muted-foreground mb-1">One per line. Use &quot;Title | Description&quot;</p>
+                  <textarea
+                    value={editForm.benefits}
+                    onChange={(e) => setEditForm((f) => ({ ...f, benefits: e.target.value }))}
+                    placeholder="Free Shipping | On orders over Rs. 5,000"
                     rows={3}
                     className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation resize-y"
                   />

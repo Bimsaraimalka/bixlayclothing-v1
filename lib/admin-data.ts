@@ -36,6 +36,8 @@ export type AdminProduct = {
   image_urls?: string[]
   /** Product details bullets (shown on product detail page). */
   details?: string[]
+  /** Policy/benefit highlights (e.g. Free Shipping, Easy Returns). Each has title and optional description. */
+  benefits?: { title: string; description?: string }[]
 }
 
 /** Image library entry, grouped by category for product image sets. */

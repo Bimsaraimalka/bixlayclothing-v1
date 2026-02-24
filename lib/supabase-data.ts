@@ -17,6 +17,7 @@ type ProductRow = {
   promo_code?: string | null
   image_urls?: string[] | unknown
   details?: string[] | unknown
+  benefits?: { title: string; description?: string }[] | unknown
   created_at?: string
 }
 
@@ -94,6 +95,14 @@ function parseJsonStringArray(v: string[] | unknown): string[] {
   return []
 }
 
+function parseBenefits(v: { title: string; description?: string }[] | unknown): { title: string; description?: string }[] {
+  if (!Array.isArray(v)) return []
+  return v.filter(
+    (x): x is { title: string; description?: string } =>
+      x != null && typeof x === 'object' && typeof (x as { title?: unknown }).title === 'string'
+  ).map((x) => ({ title: (x as { title: string }).title, description: typeof (x as { description?: unknown }).description === 'string' ? (x as { description: string }).description : undefined }))
+}
+
 function toAdminProduct(r: ProductRow): AdminProduct {
   const discount = r.discount_percent != null ? Number(r.discount_percent) : null
   const seg = r.segment === 'Men' || r.segment === 'Women' || r.segment === 'Unisex' ? r.segment : 'Unisex'
@@ -113,6 +122,7 @@ function toAdminProduct(r: ProductRow): AdminProduct {
     promo_code: typeof r.promo_code === 'string' && r.promo_code.trim() ? r.promo_code.trim() : null,
     image_urls: parseJsonStringArray(r.image_urls),
     details: parseJsonStringArray(r.details),
+    benefits: parseBenefits(r.benefits),
   }
 }
 
@@ -272,7 +282,7 @@ export async function fetchProducts(): Promise<AdminProduct[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, created_at')
+    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits, created_at')
     .order('id', { ascending: true })
   if (error) throw error
   return (data ?? []).map((r) => toAdminProduct(r as ProductRow))
@@ -282,7 +292,7 @@ export async function fetchProductById(id: string): Promise<AdminProduct | null>
   const supabase = createClient()
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, created_at')
+    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits, created_at')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
@@ -466,8 +476,9 @@ export async function addProductSupabase(
       promo_code: typeof p.promo_code === 'string' && p.promo_code.trim() ? p.promo_code.trim() : null,
       image_urls: Array.isArray(p.image_urls) ? p.image_urls : [],
       details: Array.isArray(p.details) ? p.details : [],
+      benefits: Array.isArray(p.benefits) ? p.benefits : [],
     })
-    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details')
+    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits')
     .single()
   if (error) throw error
   return toAdminProduct({ ...data, colors: data.colors ?? [], sizes: data.sizes ?? [] } as ProductRow)
@@ -495,6 +506,7 @@ export async function updateProductSupabase(
   if (updates.promo_code !== undefined) payload.promo_code = typeof updates.promo_code === 'string' && updates.promo_code.trim() ? updates.promo_code.trim() : null
   if (updates.image_urls !== undefined) payload.image_urls = Array.isArray(updates.image_urls) ? updates.image_urls : []
   if (updates.details !== undefined) payload.details = Array.isArray(updates.details) ? updates.details : []
+  if (updates.benefits !== undefined) payload.benefits = Array.isArray(updates.benefits) ? updates.benefits : []
   if (Object.keys(payload).length === 0) return
   const { error } = await supabase.from('products').update(payload).eq('id', id)
   if (error) throw error

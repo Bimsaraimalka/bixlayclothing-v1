@@ -3,6 +3,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  /** Disable the dev indicator/overlay that injects nextjs-portal (avoids 0x0 portal in DOM during dev) */
+  devIndicators: false,
   images: {
     unoptimized: false,
     formats: ['image/avif', 'image/webp'],

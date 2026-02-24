@@ -10,13 +10,6 @@ import { formatPrice } from '@/lib/utils'
 import { useStoreProduct } from '@/hooks/use-store-products'
 import { LoadingScreen } from '@/components/loading-screen'
 
-const DEFAULT_DETAILS = [
-  'Premium materials',
-  'Comfortable fit',
-  'Quality craftsmanship',
-  'Versatile styling',
-]
-
 /** Map color name to CSS background (hex) for the color swatch dot. */
 const COLOR_SWATCH: Record<string, string> = {
   black: '#1a1a1a',
@@ -133,8 +126,8 @@ export function ProductDetail({ productId }: { productId: string }) {
   }
 
   const categorySlug = product.category.toLowerCase().replace(/\s+/g, '-')
-  const details =
-    product.details && product.details.length > 0 ? product.details : DEFAULT_DETAILS
+  const details = product.details && product.details.length > 0 ? product.details : []
+  const benefits = product.benefits && product.benefits.length > 0 ? product.benefits : []
   const previewImages = displayImages
 
   return (
@@ -321,40 +314,36 @@ export function ProductDetail({ productId }: { productId: string }) {
           </div>
 
           <div className="border-t border-border pt-4 sm:pt-5">
-            <h3 className="font-semibold text-foreground mb-2 sm:mb-3 text-xs sm:text-sm">Product Details</h3>
-            <ul className="space-y-1.5">
-              {details.map((detail, i) => (
-                <li key={i} className="flex items-center gap-1.5 text-foreground/80 text-xs sm:text-sm">
-                  <span className="w-1.5 h-1.5 bg-accent rounded-full shrink-0" />
-                  {detail}
-                </li>
-              ))}
-            </ul>
+            {details.length > 0 && (
+              <>
+                <h3 className="font-semibold text-foreground mb-2 sm:mb-3 text-xs sm:text-sm">Product Details</h3>
+                <ul className="space-y-1.5">
+                  {details.map((detail, i) => (
+                    <li key={i} className="flex items-center gap-1.5 text-foreground/80 text-xs sm:text-sm">
+                      <span className="w-1.5 h-1.5 bg-accent rounded-full shrink-0" />
+                      {detail}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
 
-          <div className="space-y-2 border-t border-border pt-4 sm:pt-5">
-            <div className="flex items-start gap-2">
-              <span className="text-accent text-sm">✓</span>
-              <div>
-                <p className="font-semibold text-foreground text-xs sm:text-sm">Free Shipping</p>
-                <p className="text-xs text-muted-foreground">On orders over Rs. 5,000</p>
-              </div>
+          {benefits.length > 0 && (
+            <div className="space-y-2 border-t border-border pt-4 sm:pt-5">
+              {benefits.map((b, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-accent text-sm">✓</span>
+                  <div>
+                    <p className="font-semibold text-foreground text-xs sm:text-sm">{b.title}</p>
+                    {b.description ? (
+                      <p className="text-xs text-muted-foreground">{b.description}</p>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-start gap-2">
-              <span className="text-accent text-sm">✓</span>
-              <div>
-                <p className="font-semibold text-foreground text-xs sm:text-sm">Easy Returns</p>
-                <p className="text-xs text-muted-foreground">30-day return policy</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-accent text-sm">✓</span>
-              <div>
-                <p className="font-semibold text-foreground text-xs sm:text-sm">Quality Guaranteed</p>
-                <p className="text-xs text-muted-foreground">Premium materials and craftsmanship</p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
