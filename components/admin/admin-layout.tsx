@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Package, ShoppingBag, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Store, Tag } from 'lucide-react'
+import { BarChart3, Package, ShoppingBag, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Store, Tag, Users } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAdminAuth } from '@/components/admin/admin-auth-context'
 import { useAdminData } from '@/components/admin/admin-data-context'
@@ -23,7 +23,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const { logout } = useAdminAuth()
+  const { logout, isOwner } = useAdminAuth()
   const { orders } = useAdminData()
   const pendingOrderCount = orders.filter((o) => o.status === 'Pending').length
   const isSettingsPath = pathname.startsWith('/admin/settings')
@@ -107,6 +107,21 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               </Link>
             )
           })}
+
+          {isOwner && (
+            <Link
+              href="/admin/team"
+              onClick={closeSidebar}
+              className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] touch-manipulation ${
+                pathname.startsWith('/admin/team')
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted'
+              }`}
+            >
+              <Users size={22} className="shrink-0" />
+              <span className="truncate flex-1">Team</span>
+            </Link>
+          )}
 
           {/* Settings dropdown */}
           <div className="pt-1">

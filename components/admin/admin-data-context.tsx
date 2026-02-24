@@ -13,7 +13,6 @@ import {
   addProductCategorySupabase,
   updateProductCategorySupabase,
   removeProductCategorySupabase,
-  addOrderSupabase,
   updateOrderStatusSupabase,
 } from '@/lib/supabase-data'
 
@@ -27,7 +26,7 @@ type AdminDataContextType = {
   error: string | null
   refetch: () => Promise<void>
   refetchCategories: () => Promise<void>
-  addProduct: (p: Omit<AdminProduct, 'id' | 'status'>) => Promise<void>
+  addProduct: (p: Omit<AdminProduct, 'id'>) => Promise<void>
   updateProduct: (id: string, updates: Partial<AdminProduct>) => Promise<void>
   removeProduct: (id: string) => Promise<void>
   addProductCategory: (name: string) => Promise<void>
@@ -89,7 +88,7 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
     refetch()
   }, [refetch])
 
-  const addProduct = useCallback(async (p: Omit<AdminProduct, 'id' | 'status'>) => {
+  const addProduct = useCallback(async (p: Omit<AdminProduct, 'id'>) => {
     setError(null)
     await addProductSupabase(p)
     await refetch()

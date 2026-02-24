@@ -72,14 +72,27 @@ async function main() {
 
   if (error) {
     if (error.message.includes('already been registered')) {
-      console.log('Admin user already exists with this email. You can sign in at /admin/login with the same credentials.')
+      console.log('Admin user already exists with this email. Run the admin_profiles migration and ensure this user has a row with role owner or admin.')
     } else {
       console.error('Error creating admin user:', error.message)
     }
     process.exit(1)
   }
 
-  console.log('Admin user created successfully.')
+  const { error: profileError } = await supabaseAdmin
+    .from('admin_profiles')
+    .upsert(
+      { user_id: data.user.id, email: data.user.email ?? email, role: 'owner' },
+      { onConflict: 'user_id' }
+    )
+
+  if (profileError) {
+    console.error('User created but failed to add admin profile:', profileError.message)
+    console.error('Run: supabase/migrations/20250223000000_admin_profiles.sql then insert manually with user_id:', data.user.id)
+    process.exit(1)
+  }
+
+  console.log('Admin user created successfully (owner).')
   console.log('Email:', email)
   console.log('Sign in at: http://localhost:3000/admin/login')
 }

@@ -35,7 +35,7 @@ export function LoadingScreen({
     return (
       <div
         className={cn(
-          'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in duration-300',
+          'grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-in fade-in duration-300',
           className
         )}
         aria-busy="true"

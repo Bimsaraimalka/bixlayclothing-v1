@@ -94,6 +94,7 @@ export function ProductDetail({ productId }: { productId: string }) {
       size: (selectedSize || sizes[0]) ?? '',
       color: (selectedColor || colors[0]) ?? '',
       quantity,
+      shipping_cost: product.shipping_cost ?? undefined,
     })
     openCart()
     setIsAdded(true)

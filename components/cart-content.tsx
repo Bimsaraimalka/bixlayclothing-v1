@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Trash2, Plus, Minus, Tag, X } from 'lucide-react'
@@ -19,26 +19,40 @@ import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/components/cart-context'
 import { useCartProductImages } from '@/hooks/use-cart-product-images'
 import { validatePromoCode } from '@/app/actions/promo'
+import { getStoreSettings } from '@/app/actions/store-settings'
+import type { StoreSettings } from '@/lib/admin-data'
+
+const DEFAULT_SHIPPING = 399
+const DEFAULT_FREE_THRESHOLD = 5000
+const DEFAULT_TAX_RATE = 0.1
 
 export function CartContent() {
   const { items: cartItems, updateQuantity, removeItem, appliedPromo, setAppliedPromo } = useCart()
   const productImages = useCartProductImages(cartItems)
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
   const [promoInput, setPromoInput] = useState('')
   const [promoError, setPromoError] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
   const [itemToRemove, setItemToRemove] = useState<string | null>(null)
 
+  useEffect(() => {
+    getStoreSettings().then(setStoreSettings)
+  }, [])
+
+  const settings = storeSettings ?? { default_shipping: DEFAULT_SHIPPING, free_shipping_threshold: DEFAULT_FREE_THRESHOLD, tax_enabled: true, tax_rate: DEFAULT_TAX_RATE }
+
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const freeShippingThreshold = 5000
-  const shipping = subtotal > freeShippingThreshold ? 0 : 200
+  const shippingTotal = subtotal >= settings.free_shipping_threshold
+    ? 0
+    : cartItems.reduce((sum, i) => sum + (i.shipping_cost ?? settings.default_shipping) * i.quantity, 0)
   const discountAmount = appliedPromo
     ? appliedPromo.discount_type === 'percent'
       ? Math.round(subtotal * (appliedPromo.discount_value / 100))
       : Math.min(appliedPromo.discount_value, subtotal)
     : 0
   const afterDiscount = Math.max(0, subtotal - discountAmount)
-  const tax = Math.round(afterDiscount * 0.1)
-  const total = afterDiscount + shipping + tax
+  const tax = settings.tax_enabled ? Math.round(afterDiscount * settings.tax_rate) : 0
+  const total = afterDiscount + shippingTotal + tax
 
   const handleApplyPromo = async () => {
     const code = promoInput.trim()
@@ -223,17 +237,19 @@ export function CartContent() {
                 <div className="flex justify-between text-foreground/80">
                   <span>Shipping</span>
                   <span>
-                    {shipping === 0 ? (
+                    {shippingTotal === 0 ? (
                       <span className="text-accent font-medium">Free</span>
                     ) : (
-                      formatPrice(shipping)
+                      formatPrice(shippingTotal)
                     )}
                   </span>
                 </div>
-                <div className="flex justify-between text-foreground/80">
-                  <span>Tax</span>
-                  <span>{formatPrice(tax)}</span>
-                </div>
+                {settings.tax_enabled && (
+                  <div className="flex justify-between text-foreground/80">
+                    <span>Tax</span>
+                    <span>{formatPrice(tax)}</span>
+                  </div>
+                )}
               </div>
 
               {/* Total */}

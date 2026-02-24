@@ -1,25 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/components/cart-context'
-import { addOrderSupabase } from '@/lib/supabase-data'
+import { addOrderWithItems } from '@/lib/supabase-data'
 import { sendNewOrderNotification } from '@/app/actions/notify-new-order'
+import { getStoreSettings } from '@/app/actions/store-settings'
+import type { StoreSettings } from '@/lib/admin-data'
 import { CreditCard, Building2, Banknote, HelpCircle } from 'lucide-react'
 
-const FREE_SHIPPING_THRESHOLD = 5000
-const SHIPPING = 399
-const TAX_RATE = 0.1
 const CARD_PROCESSING_FEE = 100
+const DEFAULT_SHIPPING = 399
+const DEFAULT_FREE_THRESHOLD = 5000
+const DEFAULT_TAX_RATE = 0.1
 
 export type PaymentMethod = 'bank_transfer' | 'card' | 'cash_on_delivery'
 
 export function CheckoutForm() {
   const router = useRouter()
   const { items, clearCart, appliedPromo } = useCart()
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery')
   const [formData, setFormData] = useState({
     firstName: '',
@@ -40,6 +43,17 @@ export function CheckoutForm() {
     cardCVC: '',
   })
 
+  useEffect(() => {
+    getStoreSettings().then(setStoreSettings)
+  }, [])
+
+  const settings = storeSettings ?? {
+    default_shipping: DEFAULT_SHIPPING,
+    free_shipping_threshold: DEFAULT_FREE_THRESHOLD,
+    tax_enabled: true,
+    tax_rate: DEFAULT_TAX_RATE,
+  }
+
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
   const discountAmount = appliedPromo
     ? appliedPromo.discount_type === 'percent'
@@ -47,10 +61,12 @@ export function CheckoutForm() {
       : Math.min(appliedPromo.discount_value, subtotal)
     : 0
   const afterDiscount = Math.max(0, subtotal - discountAmount)
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING
-  const tax = Math.round(afterDiscount * TAX_RATE)
+  const shippingTotal = afterDiscount >= settings.free_shipping_threshold
+    ? 0
+    : items.reduce((sum, i) => sum + (i.shipping_cost ?? settings.default_shipping) * i.quantity, 0)
+  const tax = settings.tax_enabled ? Math.round(afterDiscount * settings.tax_rate) : 0
   const cardProcessingFee = paymentMethod === 'card' ? CARD_PROCESSING_FEE : 0
-  const total = afterDiscount + shipping + tax + cardProcessingFee
+  const total = afterDiscount + shippingTotal + tax + cardProcessingFee
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target
@@ -69,7 +85,7 @@ export function CheckoutForm() {
     try {
       const customer = `${formData.firstName.trim()} ${formData.lastName.trim()}`
       const addressLine = [formData.address.trim(), formData.apartment.trim()].filter(Boolean).join(', ') || null
-      const order = await addOrderSupabase({
+      const orderPayload = {
         customer,
         email: formData.email.trim(),
         amount: formatPrice(total),
@@ -83,7 +99,17 @@ export function CheckoutForm() {
         state: formData.state.trim() || null,
         zip_code: formData.zipCode.trim() || null,
         country: formData.country.trim() || 'Sri Lanka',
-      })
+      }
+      const orderItems = items.map((i) => ({
+        product_id: i.id,
+        product_name: i.name,
+        color: i.color || null,
+        size: i.size || null,
+        quantity: i.quantity,
+        unit_price: i.price,
+        discount_amount: 0,
+      }))
+      const order = await addOrderWithItems(orderPayload, orderItems)
       sendNewOrderNotification({
         id: order.id,
         customer: order.customer,
@@ -259,7 +285,7 @@ export function CheckoutForm() {
                     <p className="font-medium text-foreground">Standard</p>
                     <p className="text-sm text-muted-foreground">2-3 Business Days</p>
                   </div>
-                  <span className="font-medium text-foreground">{formatPrice(shipping)}</span>
+                  <span className="font-medium text-foreground">{formatPrice(shippingTotal)}</span>
                 </div>
               </div>
 
@@ -391,12 +417,14 @@ export function CheckoutForm() {
                 )}
                 <div className="flex justify-between text-foreground/80">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? <span className="text-accent font-medium">Free</span> : formatPrice(shipping)}</span>
+                  <span>{shippingTotal === 0 ? <span className="text-accent font-medium">Free</span> : formatPrice(shippingTotal)}</span>
                 </div>
-                <div className="flex justify-between text-foreground/80">
-                  <span>Tax</span>
-                  <span>{formatPrice(tax)}</span>
-                </div>
+                {settings.tax_enabled && (
+                  <div className="flex justify-between text-foreground/80">
+                    <span>Tax</span>
+                    <span>{formatPrice(tax)}</span>
+                  </div>
+                )}
                 {cardProcessingFee > 0 && (
                   <div className="flex justify-between text-foreground/80">
                     <span>Card processing fee</span>

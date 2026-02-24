@@ -61,8 +61,8 @@ export const Header = () => {
 
   useEffect(() => {
     if (!searchOpen) return
-    const isMobile = window.matchMedia('(max-width: 767px)').matches
-    if (isMobile) {
+    const isNarrow = window.matchMedia('(max-width: 1023px)').matches
+    if (isNarrow) {
       document.body.style.overflow = 'hidden'
       return () => {
         document.body.style.overflow = ''
@@ -88,8 +88,8 @@ export const Header = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* Desktop Navigation — only when enough width (lg) to avoid overflow/wrap */}
+          <nav className="hidden lg:flex items-center shrink-0 space-x-8 whitespace-nowrap">
             <Link href="/products" className={navLinkClass(pathname, '/products')}>
               Shop
             </Link>
@@ -105,7 +105,7 @@ export const Header = () => {
           </nav>
 
           {/* Right Side Icons */}
-          <div className="flex items-center space-x-4" ref={searchRef}>
+          <div className="flex items-center shrink-0 space-x-4" ref={searchRef}>
             {/* Search: click opens panel with input + real-time results */}
             <div className="relative">
               <button
@@ -124,11 +124,11 @@ export const Header = () => {
                 <>
                   {/* Mobile: full-screen overlay with backdrop */}
                   <div
-                    className="fixed inset-0 z-50 md:hidden bg-black/50"
+                    className="fixed inset-0 z-50 lg:hidden bg-black/50"
                     aria-hidden
                     onClick={() => setSearchOpen(false)}
                   />
-                  <div className="fixed inset-x-0 top-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-1 md:w-[min(90vw,400px)] max-h-[100dvh] md:max-h-[70vh] bg-background md:border md:border-border rounded-b-xl md:rounded-lg shadow-lg overflow-hidden flex flex-col">
+                  <div className="fixed inset-x-0 top-0 z-50 lg:absolute lg:inset-auto lg:right-0 lg:top-full lg:mt-1 lg:w-[min(90vw,400px)] max-h-[100dvh] lg:max-h-[70vh] bg-background lg:border lg:border-border rounded-b-xl lg:rounded-lg shadow-lg overflow-hidden flex flex-col">
                     <div className="flex items-center gap-2 p-2 border-b border-border shrink-0">
                       <Search size={18} className="text-muted-foreground shrink-0" />
                       <input
@@ -137,16 +137,16 @@ export const Header = () => {
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search products..."
-                        className="flex-1 py-2.5 md:py-2 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-base md:text-sm"
+                        className="flex-1 py-2.5 lg:py-2 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-base lg:text-sm"
                         autoComplete="off"
                       />
                       <button
                         type="button"
                         onClick={() => setSearchOpen(false)}
-                        className="min-w-[44px] min-h-[44px] p-2 md:p-1.5 hover:bg-secondary rounded transition-colors touch-manipulation flex items-center justify-center"
+                        className="min-w-[44px] min-h-[44px] p-2 lg:p-1.5 hover:bg-secondary rounded transition-colors touch-manipulation flex items-center justify-center"
                         aria-label="Close search"
                       >
-                        <X size={20} className="md:w-[18px] md:h-[18px] text-muted-foreground" />
+                        <X size={20} className="lg:w-[18px] lg:h-[18px] text-muted-foreground" />
                       </button>
                     </div>
                     <div className="flex-1 min-h-0 overflow-y-auto">
@@ -207,7 +207,7 @@ export const Header = () => {
                     <span className="hidden lg:inline text-sm font-medium">Account</span>
                   </Link>
                 ) : (
-                  <div className="hidden md:flex items-center gap-2">
+                  <div className="hidden lg:flex items-center gap-2 shrink-0">
                     <Link
                       href="/account/login"
                       className="text-sm font-medium text-foreground hover:text-primary transition-colors"
@@ -235,7 +235,7 @@ export const Header = () => {
                 {itemCount}
               </span>
             </button>
-            <details ref={mobileMenuRef} className="md:hidden group">
+            <details ref={mobileMenuRef} className="lg:hidden group">
               <summary className="list-none min-w-[44px] min-h-[44px] p-2 hover:bg-secondary rounded-lg transition-colors cursor-pointer flex items-center justify-center touch-manipulation">
                 <Menu size={20} className="text-primary" />
               </summary>

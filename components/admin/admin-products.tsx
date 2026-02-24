@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Edit, Trash2, Plus, Upload, X, GripVertical, ExternalLink, Download } from 'lucide-react'
 import { uploadProductImage } from '@/lib/supabase-storage'
@@ -28,6 +28,8 @@ import { formatPrice } from '@/lib/utils'
 import { useAdminData } from '@/components/admin/admin-data-context'
 import { LoadingScreen } from '@/components/loading-screen'
 import { buildCsv, downloadCsv } from '@/lib/csv'
+import { fetchStoreSettings } from '@/lib/supabase-data'
+import type { StoreSettings } from '@/lib/admin-data'
 
 const COLOR_PRESETS = [
   { label: 'Black & White', value: 'Black, White' },
@@ -65,11 +67,13 @@ const emptyForm = () => ({
   unisex: false,
   segment: 'Unisex' as const,
   new_arrival: false,
+  out_of_stock: false,
   discount_percent: '',
   promo_code: '',
   image_urls: [] as string[],
   details: '',
   benefits: '',
+  shipping_cost: '',
 })
 
 export function AdminProducts() {
@@ -84,11 +88,20 @@ export function AdminProducts() {
   const [editForm, setEditForm] = useState(emptyForm())
   const [dragAddImageIndex, setDragAddImageIndex] = useState<number | null>(null)
   const [dragEditImageIndex, setDragEditImageIndex] = useState<number | null>(null)
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchStoreSettings().then((s) => {
+      if (!cancelled) setStoreSettings(s)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   const handleDownloadProductsCsv = () => {
     const headers = [
       'ID', 'Name', 'Category', 'Price', 'Stock', 'Status', 'Colors', 'Sizes',
-      'Unisex', 'Segment', 'New arrival', 'Discount %', 'Promo code', 'Image URLs', 'Details', 'Benefits',
+      'Unisex', 'Segment', 'New arrival', 'Discount %', 'Promo code', 'Image URLs', 'Details', 'Benefits', 'Shipping cost',
     ]
     const rows = products.map((p) => [
       p.id,
@@ -107,6 +120,7 @@ export function AdminProducts() {
       (p.image_urls ?? []).join('; '),
       (p.details ?? []).join('; '),
       (p.benefits ?? []).map((b) => (b.description ? `${b.title} | ${b.description}` : b.title)).join('; '),
+      p.shipping_cost ?? '',
     ])
     const csv = buildCsv(headers, rows)
     downloadCsv(csv, `products-${new Date().toISOString().slice(0, 10)}.csv`)
@@ -139,11 +153,13 @@ export function AdminProducts() {
       unisex: product.unisex === true,
       segment: product.segment === 'Men' || product.segment === 'Women' ? product.segment : 'Unisex',
       new_arrival: product.new_arrival === true,
+      out_of_stock: product.status === 'Out of Stock',
       discount_percent: product.discount_percent != null ? String(product.discount_percent) : '',
       promo_code: product.promo_code ?? '',
       image_urls: product.image_urls ?? [],
       details: (product.details ?? []).join('\n'),
       benefits: (product.benefits ?? []).map((b) => (b.description ? `${b.title} | ${b.description}` : b.title)).join('\n'),
+      shipping_cost: product.shipping_cost != null ? String(product.shipping_cost) : '',
     })
   }
 
@@ -201,6 +217,7 @@ export function AdminProducts() {
         category: form.category,
         price,
         stock,
+        status: form.out_of_stock ? 'Out of Stock' : 'Active',
         colors,
         sizes,
         unisex: form.unisex,
@@ -211,6 +228,7 @@ export function AdminProducts() {
         image_urls: form.image_urls,
         details,
         benefits,
+        shipping_cost: form.shipping_cost.trim() ? Math.max(0, parseFloat(form.shipping_cost) || 0) : null,
       })
       setForm(emptyForm())
       setAddOpen(false)
@@ -261,6 +279,7 @@ export function AdminProducts() {
         category: editForm.category,
         price,
         stock,
+        status: editForm.out_of_stock ? 'Out of Stock' : 'Active',
         colors,
         sizes,
         unisex: editForm.unisex,
@@ -271,6 +290,7 @@ export function AdminProducts() {
         image_urls: editForm.image_urls,
         details,
         benefits,
+        shipping_cost: editForm.shipping_cost.trim() ? Math.max(0, parseFloat(editForm.shipping_cost) || 0) : null,
       })
       setEditingProduct(null)
     } finally {
@@ -324,7 +344,7 @@ export function AdminProducts() {
                 Add Product
               </Button>
             </DialogTrigger>
-          <DialogContent className="flex flex-col p-0 gap-0 w-[calc(100vw-2rem)] max-w-md max-h-[90dvh] sm:max-h-[85vh] overflow-hidden rounded-xl">
+          <DialogContent className="flex flex-col p-0 gap-0 w-[calc(100vw-2rem)] max-w-2xl max-h-[90dvh] sm:max-h-[85vh] overflow-hidden rounded-xl">
             <DialogHeader className="shrink-0 border-b border-border bg-background px-4 sm:px-6 pt-4 pb-3 pr-16 sm:pr-16">
               <DialogTitle className="text-lg sm:text-xl">Add new product</DialogTitle>
             </DialogHeader>
@@ -493,6 +513,24 @@ export function AdminProducts() {
                   className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation resize-y"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Shipping cost (Rs., optional)</label>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Leave empty to use store default
+                  {storeSettings != null && (
+                    <span className="ml-1 font-medium text-foreground">(default: Rs. {storeSettings.default_shipping})</span>
+                  )}
+                </p>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.shipping_cost}
+                  onChange={(e) => setForm((f) => ({ ...f, shipping_cost: e.target.value }))}
+                  placeholder={storeSettings != null ? `e.g. 250 or leave empty for Rs. ${storeSettings.default_shipping}` : 'e.g. 250'}
+                  className="w-full min-h-[44px] px-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation"
+                />
+              </div>
               <div className="flex items-center gap-3 min-h-[44px]">
                 <input
                   type="checkbox"
@@ -531,6 +569,18 @@ export function AdminProducts() {
                     required
                   />
                 </div>
+              </div>
+              <div className="flex items-center gap-3 min-h-[44px]">
+                <input
+                  type="checkbox"
+                  id="add-out-of-stock"
+                  checked={form.out_of_stock}
+                  onChange={(e) => setForm((f) => ({ ...f, out_of_stock: e.target.checked }))}
+                  className="h-5 w-5 rounded border-border touch-manipulation"
+                />
+                <label htmlFor="add-out-of-stock" className="text-sm font-medium text-foreground cursor-pointer touch-manipulation">
+                  Mark as Out of stock (product will show as sold out on the store)
+                </label>
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Colors</label>
@@ -642,7 +692,7 @@ export function AdminProducts() {
         </AlertDialog>
 
         <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
-          <DialogContent className="flex flex-col p-0 gap-0 w-[calc(100vw-2rem)] max-w-md max-h-[90dvh] sm:max-h-[85vh] overflow-hidden rounded-xl">
+          <DialogContent className="flex flex-col p-0 gap-0 w-[calc(100vw-2rem)] max-w-2xl max-h-[90dvh] sm:max-h-[85vh] overflow-hidden rounded-xl">
             <DialogHeader className="shrink-0 border-b border-border bg-background px-4 sm:px-6 pt-4 pb-3 pr-16 sm:pr-16">
               <DialogTitle className="text-lg sm:text-xl">Edit product</DialogTitle>
             </DialogHeader>
@@ -795,6 +845,24 @@ export function AdminProducts() {
                     className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation resize-y"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Shipping cost (Rs., optional)</label>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Leave empty to use store default
+                    {storeSettings != null && (
+                      <span className="ml-1 font-medium text-foreground">(default: Rs. {storeSettings.default_shipping})</span>
+                    )}
+                  </p>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={editForm.shipping_cost}
+                    onChange={(e) => setEditForm((f) => ({ ...f, shipping_cost: e.target.value }))}
+                    placeholder={storeSettings != null ? `e.g. 250 or leave empty for Rs. ${storeSettings.default_shipping}` : 'e.g. 250'}
+                    className="w-full min-h-[44px] px-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation"
+                  />
+                </div>
                 <div className="flex items-center gap-3 min-h-[44px]">
                   <input
                     type="checkbox"
@@ -831,6 +899,18 @@ export function AdminProducts() {
                       required
                     />
                   </div>
+                </div>
+                <div className="flex items-center gap-3 min-h-[44px]">
+                  <input
+                    type="checkbox"
+                    id="edit-out-of-stock"
+                    checked={editForm.out_of_stock}
+                    onChange={(e) => setEditForm((f) => ({ ...f, out_of_stock: e.target.checked }))}
+                    className="h-5 w-5 rounded border-border touch-manipulation"
+                  />
+                  <label htmlFor="edit-out-of-stock" className="text-sm font-medium text-foreground cursor-pointer touch-manipulation">
+                    Mark as Out of stock (product will show as sold out on the store)
+                  </label>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1.5">Colors</label>

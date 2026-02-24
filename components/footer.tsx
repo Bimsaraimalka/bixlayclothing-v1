@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Facebook, Instagram, Music2 } from 'lucide-react'
 
 export const Footer = () => {
@@ -11,7 +12,17 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8 py-10 sm:py-14 lg:py-16">
           {/* Brand */}
           <div className="space-y-3 sm:space-y-4">
-            <h3 className="text-xl sm:text-2xl font-serif font-bold">Bixlay</h3>
+            <Link href="/" className="inline-block">
+              <Image
+                src="/bixlay-logo.png"
+                alt="Bixlay"
+                width={240}
+                height={48}
+                className="h-7 sm:h-8 w-auto max-w-[80px] object-contain brightness-0 invert"
+                quality={95}
+                sizes="(max-width: 640px) 112px, 128px"
+              />
+            </Link>
             <p className="text-xs sm:text-sm opacity-80">
               Premium clothing for the modern individual. Quality, style, and comfort in every piece.
             </p>

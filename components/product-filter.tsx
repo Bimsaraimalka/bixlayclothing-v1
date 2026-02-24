@@ -27,12 +27,13 @@ type ProductFilterContentProps = {
 
 function ProductFilterContent({ onFilterChange, variant = 'sidebar' }: ProductFilterContentProps) {
   const isSheet = variant === 'sheet'
-  const [expandedSection, setExpandedSection] = useState<string | null>(isSheet ? 'category' : 'category')
+  const [expandedSection, setExpandedSection] = useState<string | null>(isSheet ? null : 'category')
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { categories, loading } = useStoreCategories()
 
   const toggleSection = (section: string) => {
+    if (isSheet) return
     setExpandedSection(expandedSection === section ? null : section)
   }
 
@@ -69,7 +70,7 @@ function ProductFilterContent({ onFilterChange, variant = 'sidebar' }: ProductFi
 
   const sectionHeaderClass = isSheet
     ? 'text-base font-semibold text-foreground min-h-[48px] py-3'
-    : 'font-semibold text-foreground min-h-[44px] py-2'
+    : 'text-base font-semibold text-foreground min-h-[44px] py-2'
 
   const optionsWrapClass = isSheet ? 'flex flex-wrap gap-2 mt-3' : 'mt-4 space-y-3'
 
@@ -78,24 +79,30 @@ function ProductFilterContent({ onFilterChange, variant = 'sidebar' }: ProductFi
       ? chipClass(selected)
       : `flex items-center gap-3 cursor-pointer group block py-2.5 min-h-[44px] touch-manipulation ${selected ? 'font-medium text-primary' : ''}`
 
-  const optionTextClass = isSheet ? '' : 'text-xs text-foreground group-hover:text-primary transition-colors'
+  const optionTextClass = isSheet ? '' : 'text-sm text-foreground group-hover:text-primary transition-colors'
+
+  const showSection = (section: string) => isSheet || expandedSection === section
 
   return (
-    <div className={isSheet ? 'space-y-6' : 'space-y-4 sm:space-y-6'}>
+    <div className={isSheet ? 'space-y-6 pb-2' : 'space-y-4 sm:space-y-6'}>
       {/* Category Filter */}
       <div className={isSheet ? 'pb-6 border-b border-border' : 'border-b border-border pb-4 sm:pb-6'}>
-        <button
-          type="button"
-          onClick={() => toggleSection('category')}
-          className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
-        >
-          Category
-          <ChevronDown
-            size={20}
-            className={`transition-transform duration-300 ${expandedSection === 'category' ? 'rotate-180' : ''}`}
-          />
-        </button>
-        {expandedSection === 'category' && (
+        {isSheet ? (
+          <p className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Category</p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => toggleSection('category')}
+            className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
+          >
+            Category
+            <ChevronDown
+              size={20}
+              className={`transition-transform duration-300 ${expandedSection === 'category' ? 'rotate-180' : ''}`}
+            />
+          </button>
+        )}
+        {showSection('category') && (
           <div className={optionsWrapClass}>
             {loading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
@@ -118,18 +125,22 @@ function ProductFilterContent({ onFilterChange, variant = 'sidebar' }: ProductFi
 
       {/* Price Filter */}
       <div className={isSheet ? 'pb-6 border-b border-border' : 'border-b border-border pb-4 sm:pb-6'}>
-        <button
-          type="button"
-          onClick={() => toggleSection('price')}
-          className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
-        >
-          Price
-          <ChevronDown
-            size={20}
-            className={`transition-transform duration-300 ${expandedSection === 'price' ? 'rotate-180' : ''}`}
-          />
-        </button>
-        {expandedSection === 'price' && (
+        {isSheet ? (
+          <p className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Price</p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => toggleSection('price')}
+            className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
+          >
+            Price
+            <ChevronDown
+              size={20}
+              className={`transition-transform duration-300 ${expandedSection === 'price' ? 'rotate-180' : ''}`}
+            />
+          </button>
+        )}
+        {showSection('price') && (
           <div className={optionsWrapClass}>
             {PRICE_OPTIONS.map(({ label, value }) => (
               <Link
@@ -146,18 +157,22 @@ function ProductFilterContent({ onFilterChange, variant = 'sidebar' }: ProductFi
 
       {/* Size Filter */}
       <div className={isSheet ? 'pb-6 border-b border-border' : 'border-b border-border pb-4 sm:pb-6'}>
-        <button
-          type="button"
-          onClick={() => toggleSection('size')}
-          className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
-        >
-          Size
-          <ChevronDown
-            size={20}
-            className={`transition-transform duration-300 ${expandedSection === 'size' ? 'rotate-180' : ''}`}
-          />
-        </button>
-        {expandedSection === 'size' && (
+        {isSheet ? (
+          <p className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Size</p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => toggleSection('size')}
+            className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
+          >
+            Size
+            <ChevronDown
+              size={20}
+              className={`transition-transform duration-300 ${expandedSection === 'size' ? 'rotate-180' : ''}`}
+            />
+          </button>
+        )}
+        {showSection('size') && (
           <div className={optionsWrapClass}>
             {SIZES.map((size) => (
               <Link
@@ -174,18 +189,22 @@ function ProductFilterContent({ onFilterChange, variant = 'sidebar' }: ProductFi
 
       {/* Color Filter */}
       <div className={isSheet ? 'pb-6' : 'pb-4 sm:pb-6'}>
-        <button
-          type="button"
-          onClick={() => toggleSection('color')}
-          className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
-        >
-          Color
-          <ChevronDown
-            size={20}
-            className={`transition-transform duration-300 ${expandedSection === 'color' ? 'rotate-180' : ''}`}
-          />
-        </button>
-        {expandedSection === 'color' && (
+        {isSheet ? (
+          <p className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Color</p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => toggleSection('color')}
+            className={`w-full flex items-center justify-between transition-colors touch-manipulation ${sectionHeaderClass}`}
+          >
+            Color
+            <ChevronDown
+              size={20}
+              className={`transition-transform duration-300 ${expandedSection === 'color' ? 'rotate-180' : ''}`}
+            />
+          </button>
+        )}
+        {showSection('color') && (
           <div className={optionsWrapClass}>
             {COLORS.map((color) => (
               <Link
