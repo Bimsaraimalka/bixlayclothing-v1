@@ -1,6 +1,10 @@
 import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
 
+let supabaseClient: SupabaseClient | null = null
+
 export function createClient(): SupabaseClient {
+  if (supabaseClient) return supabaseClient
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
@@ -10,7 +14,8 @@ export function createClient(): SupabaseClient {
       'Missing NEXT_PUBLIC_SUPABASE_URL or Supabase anon key (NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY)'
     )
   }
-  return createSupabaseClient(url, anonKey)
+  supabaseClient = createSupabaseClient(url, anonKey)
+  return supabaseClient
 }
 
 export function isSupabaseConfigured(): boolean {
