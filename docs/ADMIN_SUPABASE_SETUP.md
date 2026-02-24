@@ -135,3 +135,9 @@ This creates a user in Supabase Auth with `user_metadata: { role: 'admin' }`. Th
   Use exactly `admin@bixlay.com` and `admin123` (no extra spaces). If it still fails, check the browser console and that you’re on `http://localhost:3000/admin/login`.
 
 - **"Bucket not found" (StorageApiError)** when uploading product images: create the Storage bucket **\`library-images\`** (Storage → New bucket, set Public ON) and add the policies in section **5b** above.
+
+---
+
+## Delete users and recreate owner (owner@bixlay.com)
+
+To remove admin users and set **owner@bixlay.com** as the only owner, see **[docs/ADMIN-DELETE-AND-RECREATE-OWNER.md](ADMIN-DELETE-AND-RECREATE-OWNER.md)**. It covers deleting from `admin_profiles` and Auth, and running `scripts/create-owner.js` to create or promote owner@bixlay.com.

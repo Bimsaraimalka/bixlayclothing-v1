@@ -143,6 +143,11 @@ export default function AdminSettingsPage() {
                 <label htmlFor="tax_enabled" className="text-sm font-medium text-foreground cursor-pointer">
                   Enable tax
                 </label>
+                {!isOwner && (
+                  <span className="text-xs text-muted-foreground" title="Only the owner can edit these settings">
+                    (Only the owner can change this)
+                  </span>
+                )}
               </div>
               {form.tax_enabled && (
                 <div>
@@ -204,6 +209,11 @@ export default function AdminSettingsPage() {
                 <label htmlFor="contact_phone_visible" className="text-sm font-medium text-foreground cursor-pointer">
                   Show phone on site (Contact page &amp; payment completed)
                 </label>
+                {!isOwner && (
+                  <span className="text-xs text-muted-foreground" title="Only the owner can edit these settings">
+                    (Only the owner can change this)
+                  </span>
+                )}
               </div>
               {isOwner && (
                 <Button type="submit" disabled={saving} className="min-h-[44px] px-5">

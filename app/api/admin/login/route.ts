@@ -56,11 +56,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not an admin' }, { status: 401 })
     }
 
-    // Ensure owner@bixlay.com always has owner role (full settings & admin access)
-    const effectiveRole =
-      (authData.user.email ?? '').toLowerCase() === 'owner@bixlay.com'
-        ? 'owner'
-        : profile.role
+    // Ensure owner@bixlay.com always has owner role (use both Auth email and request body)
+    const authEmail = (authData.user.email ?? '').toLowerCase()
+    const isOwnerEmail =
+      authEmail === 'owner@bixlay.com' || email === 'owner@bixlay.com'
+    const effectiveRole = isOwnerEmail ? 'owner' : profile.role
 
     const secret = process.env.ADMIN_SESSION_SECRET
     if (!secret) {
