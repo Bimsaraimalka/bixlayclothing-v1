@@ -40,5 +40,5 @@ After setup, add products in **Admin → Products**; they will appear on the mai
 
 On the free plan, Supabase can pause projects after a period of no traffic. A server cron pings your project so it stays active.
 
-- **Vercel:** The repo includes `vercel.json` with a cron that calls `/api/cron` every 6 hours. In Vercel → Project → Settings → Environment Variables, add `CRON_SECRET` (any random string). Vercel Cron will send it in the `Authorization: Bearer <CRON_SECRET>` header; the route rejects requests without it.
-- **Other hosts:** Use a cron service (e.g. cron-job.org, Upstash QStash) to GET `https://your-domain.com/api/cron` with header `Authorization: Bearer YOUR_CRON_SECRET` on a schedule (e.g. every 6–24 hours). Set the same `CRON_SECRET` in your app env so the route can validate the request.
+- **Vercel:** The repo includes `vercel.json` with a cron that calls `/api/cron` once per day (Hobby plan allows one run per day). In Vercel → Project → Settings → Environment Variables, add `CRON_SECRET` (any random string). Vercel Cron will send it in the `Authorization: Bearer <CRON_SECRET>` header; the route rejects requests without it.
+- **Other hosts:** Use a cron service (e.g. cron-job.org, Upstash QStash) to GET `https://your-domain.com/api/cron` with header `Authorization: Bearer YOUR_CRON_SECRET` on a schedule (e.g. once per day or every 6–24 hours). Set the same `CRON_SECRET` in your app env so the route can validate the request.
