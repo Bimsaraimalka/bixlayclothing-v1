@@ -6,6 +6,9 @@ export const SITE_NAME = 'Bixlay'
 export const SITE_DESCRIPTION =
   'Bixlay is a premium clothing company. Discover refined, high-quality apparel for every occasion.'
 
+/** Hero section image (home page). Reused as product fallback when no image. */
+export const HERO_IMAGE = '/new-bixlay-hero-image.png'
+
 export const BASE_URL =
   typeof process.env.NEXT_PUBLIC_SITE_URL === 'string' && process.env.NEXT_PUBLIC_SITE_URL.trim()
     ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')

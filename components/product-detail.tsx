@@ -9,6 +9,7 @@ import { useCart } from '@/components/cart-context'
 import { formatPrice } from '@/lib/utils'
 import { useStoreProduct } from '@/hooks/use-store-products'
 import { LoadingScreen } from '@/components/loading-screen'
+import { HERO_IMAGE } from '@/lib/site'
 
 /** Map color name to CSS background (hex) for the color swatch dot. */
 const COLOR_SWATCH: Record<string, string> = {
@@ -83,7 +84,7 @@ export function ProductDetail({ productId }: { productId: string }) {
   const displayImages =
     product?.image_urls && product.image_urls.length > 0
       ? product.image_urls
-      : ['/hero-bixlay-models.png']
+      : [HERO_IMAGE]
 
   const handleAddToCart = () => {
     if (!product) return

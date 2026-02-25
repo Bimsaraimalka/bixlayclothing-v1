@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { HERO_IMAGE } from '@/lib/site'
 
 export const Hero = () => {
   return (
-    <section className="w-full py-[10px] bg-gradient-to-b from-secondary to-background">
+    <section className="hero-section-bg w-full py-[10px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[360px] lg:min-h-[560px]">
           {/* Left: Copy */}
@@ -46,7 +47,7 @@ export const Hero = () => {
           {/* Right: Image */}
           <div className="order-1 lg:order-2 relative w-full aspect-[4/3] lg:aspect-[5/4] min-h-[260px] max-h-[360px] sm:min-h-[320px] sm:max-h-[420px] lg:min-h-[560px] lg:max-h-[720px] rounded-sm overflow-hidden bg-transparent">
             <Image
-              src="/hero-bixlay-models.png"
+              src={HERO_IMAGE}
               alt="Bixlay premium clothing collection - models in athletic and casual wear"
               fill
               className="object-contain object-center"

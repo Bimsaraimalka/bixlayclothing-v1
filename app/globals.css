@@ -77,6 +77,8 @@
 @theme inline {
   --animate-loading-dot: loading-dot 1.4s ease-in-out infinite both;
   --animate-new-arrivals-scroll: new-arrivals-scroll 80s linear infinite;
+  --animate-bg-gradient-shift: bg-gradient-shift 14s ease infinite;
+  --animate-bg-soft-pulse: bg-soft-pulse 6s ease-in-out infinite;
   --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
   --font-serif: 'Playfair Display', 'Playfair Display Fallback', serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
@@ -137,6 +139,57 @@
   100% {
     transform: translateX(-50%);
   }
+}
+
+/* Hero / section background: subtle gradient shift */
+@keyframes bg-gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Featured section: very subtle background pulse */
+@keyframes bg-soft-pulse {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.04;
+  }
+}
+
+/* Hero: animated gradient background */
+.hero-section-bg {
+  background: linear-gradient(
+    90deg,
+    var(--secondary) 0%,
+    var(--background) 50%,
+    var(--secondary) 100%
+  );
+  background-size: 200% 100%;
+  animation: bg-gradient-shift 14s ease infinite;
+}
+
+/* Featured products: subtle pulse overlay */
+.featured-section-bg {
+  position: relative;
+}
+.featured-section-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--primary);
+  opacity: 0;
+  animation: bg-soft-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+.featured-section-bg > * {
+  position: relative;
+  z-index: 1;
 }
 
 @layer base {
