@@ -6,23 +6,22 @@ import { useRef, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 const HERO_VIDEO = '/Brand_Hero_Video.mov'
-const SAFARI_HERO_IMAGE = '/safari-hero-image.jpg'
-
-function isSafariMobile() {
-  if (typeof navigator === 'undefined') return false
-  return /iPad|iPhone|iPod/.test(navigator.userAgent)
-}
+const HERO_IMAGE = '/safari-hero-image.jpg'
 
 export const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [useSafariImage, setUseSafariImage] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
-    setUseSafariImage(isSafariMobile())
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
   }, [])
 
   useEffect(() => {
-    if (useSafariImage) return
+    if (!isDesktop) return
     const video = videoRef.current
     if (!video) return
 
@@ -40,7 +39,7 @@ export const Hero = () => {
         video.removeEventListener('canplay', play)
       }
     }
-  }, [useSafariImage])
+  }, [isDesktop])
 
   return (
     <section className="w-full bg-black pt-0 lg:pt-10">
@@ -84,9 +83,9 @@ export const Hero = () => {
 
           {/* Right: Brand video (or Safari mobile image) - slightly wider column */}
           <div className="order-1 lg:order-2 relative w-full h-[220px] sm:h-[280px] lg:h-[390px] rounded-sm overflow-hidden bg-black">
-            {useSafariImage ? (
+            {!isDesktop ? (
               <Image
-                src={SAFARI_HERO_IMAGE}
+                src={HERO_IMAGE}
                 alt="Bixlay brand"
                 fill
                 className="object-contain object-center"
