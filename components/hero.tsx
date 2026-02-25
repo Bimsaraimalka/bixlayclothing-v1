@@ -1,34 +1,10 @@
-'use client'
-
 import Link from 'next/link'
-import { useRef, useEffect } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 
-const HERO_VIDEO = '/Brand_Hero_Video.mov'
+const HERO_GIF = '/hero-gif.gif'
 
 export const Hero = () => {
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const play = () => {
-      video.play().catch(() => {})
-    }
-
-    if (video.readyState >= 2) {
-      play()
-    } else {
-      video.addEventListener('loadeddata', play)
-      video.addEventListener('canplay', play)
-      return () => {
-        video.removeEventListener('loadeddata', play)
-        video.removeEventListener('canplay', play)
-      }
-    }
-  }, [])
-
   return (
     <section className="w-full bg-black pt-0 lg:pt-10">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-0 pt-10 lg:pt-0">
@@ -69,19 +45,16 @@ export const Hero = () => {
             </div>
           </div>
 
-          {/* Right: Brand video - slightly wider column, video fills and scales */}
+          {/* Right: Brand hero - slightly wider column, gif fills and scales */}
           <div className="order-1 lg:order-2 relative w-full h-[220px] sm:h-[280px] lg:h-[390px] rounded-sm overflow-hidden bg-black">
-            <video
-              ref={videoRef}
-              src={HERO_VIDEO}
-              autoPlay
-              muted
-              playsInline
-              preload="auto"
-              className="absolute inset-0 w-full h-full object-contain object-center"
-              aria-label="Bixlay brand video"
+            <Image
+              src={HERO_GIF}
+              alt="Bixlay brand"
+              fill
+              className="object-contain object-center"
+              unoptimized
             />
-            {/* Left-edge fade to blend video into black background */}
+            {/* Left-edge fade to blend into black background */}
             <div
               className="absolute inset-y-0 left-0 w-24 sm:w-32 lg:w-40 pointer-events-none z-10"
               style={{
@@ -89,7 +62,7 @@ export const Hero = () => {
               }}
               aria-hidden
             />
-            {/* Right-edge fade to blend video into black background */}
+            {/* Right-edge fade to blend into black background */}
             <div
               className="absolute inset-y-0 right-0 w-24 sm:w-32 lg:w-40 pointer-events-none z-10"
               style={{
