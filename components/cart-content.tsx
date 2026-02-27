@@ -39,6 +39,13 @@ export function CartContent() {
     getStoreSettings().then(setStoreSettings)
   }, [])
 
+  // Refetch when window regains focus so tax enable/disable from admin is reflected
+  useEffect(() => {
+    const onFocus = () => getStoreSettings().then(setStoreSettings)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
+
   const settings = storeSettings ?? { default_shipping: DEFAULT_SHIPPING, free_shipping_threshold: DEFAULT_FREE_THRESHOLD, tax_enabled: true, tax_rate: DEFAULT_TAX_RATE }
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
@@ -273,10 +280,10 @@ export function CartContent() {
               </Link>
 
               {/* Info Messages */}
-              {subtotal < freeShippingThreshold && (
+              {subtotal < settings.free_shipping_threshold && (
                 <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
                   <p className="text-xs sm:text-sm text-foreground">
-                    <span className="font-medium">Free shipping</span> for orders over Rs. 5,000
+                    <span className="font-medium">Free shipping</span> for orders over {formatPrice(settings.free_shipping_threshold)}
                   </p>
                 </div>
               )}

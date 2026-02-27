@@ -35,6 +35,11 @@ export function CartDrawer() {
     getStoreSettings().then(setStoreSettings)
   }, [])
 
+  // Refetch store settings when drawer opens so tax enable/disable from admin is reflected
+  useEffect(() => {
+    if (isOpen) getStoreSettings().then(setStoreSettings)
+  }, [isOpen])
+
   const settings = storeSettings ?? { default_shipping: 399, free_shipping_threshold: 5000, tax_enabled: true, tax_rate: 0.1 }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -246,7 +251,7 @@ export function CartDrawer() {
                 <span>{formatPrice(shippingTotal)}</span>
               </div>
             )}
-            {settings.tax_enabled && tax > 0 && (
+            {settings.tax_enabled && (
               <div className="flex justify-between text-sm sm:text-base text-foreground/80">
                 <span>Tax</span>
                 <span>{formatPrice(tax)}</span>

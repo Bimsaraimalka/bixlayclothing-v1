@@ -77,14 +77,14 @@ export const Header = () => {
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
             <Image
-              src="/bixlay-logo.png"
+              src="/bixlay-logo2.png"
               alt="Bixlay"
               width={240}
               height={48}
-              className="h-5 sm:h-6 w-auto object-contain"
+              className="h-4 sm:h-5 w-auto object-contain"
               quality={95}
               priority
-              sizes="(max-width: 640px) 80px, 96px"
+              sizes="(max-width: 640px) 64px, 80px"
             />
           </Link>
 

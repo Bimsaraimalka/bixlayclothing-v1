@@ -30,6 +30,7 @@ import { LoadingScreen } from '@/components/loading-screen'
 import { buildCsv, downloadCsv } from '@/lib/csv'
 import { fetchStoreSettings } from '@/lib/supabase-data'
 import type { StoreSettings } from '@/lib/admin-data'
+import { ImageCropDialog } from '@/components/admin/ImageCropDialog'
 
 const COLOR_PRESETS = [
   { label: 'Black & White', value: 'Black, White' },
@@ -89,6 +90,11 @@ export function AdminProducts() {
   const [dragAddImageIndex, setDragAddImageIndex] = useState<number | null>(null)
   const [dragEditImageIndex, setDragEditImageIndex] = useState<number | null>(null)
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
+  const [cropDialogFile, setCropDialogFile] = useState<File | null>(null)
+  const [cropDialogMode, setCropDialogMode] = useState<'add' | 'edit' | null>(null)
+  const [pendingCropFilesAdd, setPendingCropFilesAdd] = useState<File[]>([])
+  const [pendingCropFilesEdit, setPendingCropFilesEdit] = useState<File[]>([])
+  const [cropUploading, setCropUploading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -416,22 +422,19 @@ export function AdminProducts() {
               </div>
               <div className="rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
                 <label className="block text-sm font-medium text-foreground mb-1.5">Images (optional)</label>
-                <p className="text-xs text-muted-foreground mb-2">Upload product images. JPEG, PNG, GIF or WebP, max 5MB each.</p>
+                <p className="text-xs text-muted-foreground mb-2">Upload product images. Adjust position and zoom in the canvas, then use the image. JPEG, PNG, GIF or WebP, max 5MB each.</p>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/gif,image/webp"
                   multiple
                   className="w-full min-h-[44px] px-4 py-2 border border-border rounded-lg bg-background text-foreground file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-muted file:text-sm file:font-medium focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation"
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const files = e.target.files ? Array.from(e.target.files) : []
-                    for (const file of files) {
-                      try {
-                        const { url } = await uploadProductImage(file)
-                        setForm((f) => ({ ...f, image_urls: [...f.image_urls, url] }))
-                      } catch (err) {
-                        console.error(err)
-                      }
-                    }
+                    if (files.length === 0) return
+                    const next = [...pendingCropFilesAdd, ...files]
+                    setPendingCropFilesAdd(next)
+                    setCropDialogFile(next[0])
+                    setCropDialogMode('add')
                     e.target.value = ''
                   }}
                 />
@@ -691,6 +694,50 @@ export function AdminProducts() {
           </AlertDialogContent>
         </AlertDialog>
 
+        <ImageCropDialog
+          open={!!cropDialogFile}
+          file={cropDialogFile}
+          uploading={cropUploading}
+          onConfirm={async (blob) => {
+            if (!cropDialogMode) return
+            const file = new File([blob], 'product.jpg', { type: 'image/jpeg' })
+            setCropUploading(true)
+            try {
+              const { url } = await uploadProductImage(file)
+              if (cropDialogMode === 'add') {
+                setForm((f) => ({ ...f, image_urls: [...f.image_urls, url] }))
+                const next = pendingCropFilesAdd.slice(1)
+                setPendingCropFilesAdd(next)
+                setCropDialogFile(next[0] ?? null)
+                if (next.length === 0) setCropDialogMode(null)
+              } else {
+                setEditForm((f) => ({ ...f, image_urls: [...f.image_urls, url] }))
+                const next = pendingCropFilesEdit.slice(1)
+                setPendingCropFilesEdit(next)
+                setCropDialogFile(next[0] ?? null)
+                if (next.length === 0) setCropDialogMode(null)
+              }
+            } catch (err) {
+              console.error(err)
+            } finally {
+              setCropUploading(false)
+            }
+          }}
+          onCancel={() => {
+            if (cropDialogMode === 'add') {
+              const next = pendingCropFilesAdd.slice(1)
+              setPendingCropFilesAdd(next)
+              setCropDialogFile(next[0] ?? null)
+              if (next.length === 0) setCropDialogMode(null)
+            } else if (cropDialogMode === 'edit') {
+              const next = pendingCropFilesEdit.slice(1)
+              setPendingCropFilesEdit(next)
+              setCropDialogFile(next[0] ?? null)
+              if (next.length === 0) setCropDialogMode(null)
+            }
+          }}
+        />
+
         <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
           <DialogContent className="flex flex-col p-0 gap-0 w-[calc(100vw-2rem)] max-w-2xl max-h-[90dvh] sm:max-h-[85vh] overflow-hidden rounded-xl">
             <DialogHeader className="shrink-0 border-b border-border bg-background px-4 sm:px-6 pt-4 pb-3 pr-16 sm:pr-16">
@@ -750,21 +797,19 @@ export function AdminProducts() {
                 </div>
                 <div className="rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
                   <label className="block text-sm font-medium text-foreground mb-1.5">Images (optional)</label>
+                  <p className="text-xs text-muted-foreground mb-2">Adjust position and zoom in the canvas, then use the image.</p>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp"
                     multiple
                     className="w-full min-h-[44px] px-4 py-2 border border-border rounded-lg bg-background text-foreground file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-muted file:text-sm file:font-medium focus:outline-none focus:ring-2 focus:ring-primary text-base sm:text-sm touch-manipulation"
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       const files = e.target.files ? Array.from(e.target.files) : []
-                      for (const file of files) {
-                        try {
-                          const { url } = await uploadProductImage(file)
-                          setEditForm((f) => ({ ...f, image_urls: [...f.image_urls, url] }))
-                        } catch (err) {
-                          console.error(err)
-                        }
-                      }
+                      if (files.length === 0) return
+                      const next = [...pendingCropFilesEdit, ...files]
+                      setPendingCropFilesEdit(next)
+                      setCropDialogFile(next[0])
+                      setCropDialogMode('edit')
                       e.target.value = ''
                     }}
                   />

@@ -14,7 +14,7 @@ export const Footer = () => {
           <div className="space-y-3 sm:space-y-4">
             <Link href="/" className="inline-block">
               <Image
-                src="/bixlay-logo.png"
+                src="/bixlay-logo2.png"
                 alt="Bixlay"
                 width={240}
                 height={48}
