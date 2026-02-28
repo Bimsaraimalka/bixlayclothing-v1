@@ -215,7 +215,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 md:h-16 shrink-0 bg-background border-b border-border flex items-center justify-between gap-3 px-4 md:px-6">
+        <header className="relative z-[45] h-14 md:h-16 shrink-0 bg-background border-b border-border flex items-center justify-between gap-3 px-4 md:px-6">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
