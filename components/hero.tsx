@@ -52,7 +52,7 @@ export const Hero = () => {
               <span className="text-white/40">·</span>
               <span>Made to last</span>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center lg:justify-start">
+            <div className="flex flex-row gap-2 sm:gap-3 justify-center lg:justify-start">
               <Link href="/products">
                 <Button
                   size="lg"
