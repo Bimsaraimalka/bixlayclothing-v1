@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
 const HERO_VIDEO = '/Brand_Hero_Video.mov'
@@ -10,39 +10,31 @@ const HERO_IMAGE = '/safari-hero-image.jpg'
 
 export const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)')
-    const update = () => setIsDesktop(mq.matches)
-    update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
-
-  useEffect(() => {
-    if (!isDesktop) return
     const video = videoRef.current
     if (!video) return
-
-    const play = () => {
-      video.play().catch(() => {})
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const play = () => video.play().catch(() => {})
+    const update = () => {
+      if (mq.matches) play()
+      else video.pause()
     }
-
-    if (video.readyState >= 2) {
-      play()
-    } else {
-      video.addEventListener('loadeddata', play)
-      video.addEventListener('canplay', play)
-      return () => {
-        video.removeEventListener('loadeddata', play)
-        video.removeEventListener('canplay', play)
-      }
+    update()
+    if (video.readyState < 2) {
+      video.addEventListener('loadeddata', update)
+      video.addEventListener('canplay', update)
     }
-  }, [isDesktop])
+    mq.addEventListener('change', update)
+    return () => {
+      video.removeEventListener('loadeddata', update)
+      video.removeEventListener('canplay', update)
+      mq.removeEventListener('change', update)
+    }
+  }, [])
 
   return (
-    <section className="w-full bg-black pt-0 lg:pt-10">
+    <section className="w-full bg-black pt-0">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-0 pt-10 lg:pt-0">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-4 lg:gap-8 items-stretch w-full lg:h-[390px] lg:min-h-0">
           {/* Left: Copy - on desktop matches video column height */}
@@ -81,38 +73,38 @@ export const Hero = () => {
             </div>
           </div>
 
-          {/* Right: Brand video (or Safari mobile image) - slightly wider column */}
+          {/* Right: Brand video (desktop) / image (mobile) — CSS visibility avoids image→video flash on reload */}
           <div className="order-1 lg:order-2 relative w-full h-[220px] sm:h-[280px] lg:h-[390px] rounded-sm overflow-hidden bg-black">
-            {!isDesktop ? (
+            <div className="absolute inset-0 lg:hidden">
               <Image
                 src={HERO_IMAGE}
                 alt="Bixlay brand"
                 fill
                 className="object-contain object-center"
               />
-            ) : (
-              <video
-                ref={videoRef}
-                src={HERO_VIDEO}
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                className="absolute inset-0 w-full h-full object-contain object-center"
-                aria-label="Bixlay brand video"
-              />
-            )}
-            {/* Left-edge fade to blend into black background */}
+            </div>
+            <video
+              ref={videoRef}
+              src={HERO_VIDEO}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              className="absolute inset-0 w-full h-full object-contain object-center hidden lg:block"
+              style={{ marginTop: 40 }}
+              aria-label="Bixlay brand video"
+            />
+            {/* Left-edge fade to blend into black background — same width on mobile and tablet */}
             <div
-              className="absolute inset-y-0 left-0 w-24 sm:w-32 lg:w-40 pointer-events-none z-10"
+              className="absolute inset-y-0 left-0 w-24 lg:w-40 pointer-events-none z-10"
               style={{
                 background: 'linear-gradient(to right, rgb(0 0 0) 0%, transparent 100%)',
               }}
               aria-hidden
             />
-            {/* Right-edge fade to blend into black background */}
+            {/* Right-edge fade to blend into black background — same width on mobile and tablet */}
             <div
-              className="absolute inset-y-0 right-0 w-24 sm:w-32 lg:w-40 pointer-events-none z-10"
+              className="absolute inset-y-0 right-0 w-24 lg:w-40 pointer-events-none z-10"
               style={{
                 background: 'linear-gradient(to left, rgb(0 0 0) 0%, transparent 100%)',
               }}
@@ -120,7 +112,7 @@ export const Hero = () => {
             />
             {/* Top-edge fade */}
             <div
-              className="absolute inset-x-0 top-0 h-6 sm:h-8 pointer-events-none z-10"
+              className="absolute inset-x-0 top-0 h-14 sm:h-16 pointer-events-none z-10"
               style={{
                 background: 'linear-gradient(to bottom, rgb(0 0 0) 0%, transparent 100%)',
               }}
