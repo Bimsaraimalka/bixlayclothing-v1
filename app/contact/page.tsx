@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Mail } from 'lucide-react'
+import { Mail, Phone } from 'lucide-react'
 import { SITE_NAME } from '@/lib/site'
+import { getStoreSettings } from '@/app/actions/store-settings'
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -10,7 +11,10 @@ export const metadata: Metadata = {
   openGraph: { title: 'Contact Us | ' + SITE_NAME, description: "We're here to help." },
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getStoreSettings()
+  const showPhone = settings.contact_phone_visible && settings.contact_phone && settings.contact_phone.trim() !== ''
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -51,6 +55,28 @@ export default function ContactPage() {
                 </div>
               </div>
             </div>
+
+            {showPhone && (
+              <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Phone size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground mb-1">Phone</h2>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Call or WhatsApp us
+                    </p>
+                    <a
+                      href={`tel:${settings.contact_phone!.replace(/\s/g, '')}`}
+                      className="inline-block py-2 text-primary font-medium hover:underline text-base sm:text-lg touch-manipulation"
+                    >
+                      {settings.contact_phone}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <p className="text-sm text-muted-foreground">
               We typically respond within 1–2 business days. If your message is about an existing order, please include your order number so we can help you faster.

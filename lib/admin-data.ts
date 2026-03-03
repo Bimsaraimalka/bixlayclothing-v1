@@ -38,6 +38,8 @@ export type AdminProduct = {
   details?: string[]
   /** Policy/benefit highlights (e.g. Free Shipping, Easy Returns). Each has title and optional description. */
   benefits?: { title: string; description?: string }[]
+  /** Per-product shipping cost (Rs.). Null = use store default. */
+  shipping_cost?: number | null
 }
 
 /** Image library entry, grouped by category for product image sets. */
@@ -107,6 +109,18 @@ export type PromoCode = {
   created_at?: string
 }
 
+/** Store-wide settings for shipping and tax (from store_settings table). */
+export type StoreSettings = {
+  default_shipping: number
+  free_shipping_threshold: number
+  tax_enabled: boolean
+  tax_rate: number
+  /** Site contact phone (e.g. +94760272240). Shown when contact_phone_visible is true. */
+  contact_phone?: string | null
+  /** When true, show contact_phone on contact page and checkout success. */
+  contact_phone_visible?: boolean
+}
+
 /** Saved product template for quick-add when creating products. */
 export type ProductTemplate = {
   id: string
@@ -117,6 +131,7 @@ export type ProductTemplate = {
   unisex: boolean
 }
 
+/** Legacy localStorage helpers – not used; admin and storefront use Supabase (AdminDataContext, supabase-data). */
 const PRODUCTS_KEY = 'bixlay_admin_products'
 const ORDERS_KEY = 'bixlay_admin_orders'
 

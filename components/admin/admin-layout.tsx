@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Package, ShoppingBag, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Store, Tag } from 'lucide-react'
+import { BarChart3, Package, ShoppingBag, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Store, Tag, Users, UserCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAdminAuth } from '@/components/admin/admin-auth-context'
 import { useAdminData } from '@/components/admin/admin-data-context'
@@ -23,7 +23,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const { logout } = useAdminAuth()
+  const { logout, isOwner } = useAdminAuth()
   const { orders } = useAdminData()
   const pendingOrderCount = orders.filter((o) => o.status === 'Pending').length
   const isSettingsPath = pathname.startsWith('/admin/settings')
@@ -40,8 +40,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     if (isSettingsPath) setSettingsExpanded(true)
   }, [isSettingsPath])
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     router.push('/admin/login')
   }
 
@@ -108,33 +108,77 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             )
           })}
 
-          {/* Settings dropdown */}
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={() => setSettingsExpanded((e) => !e)}
-              className={`flex items-center gap-3 w-full px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] touch-manipulation ${
-                isSettingsPath
-                  ? 'bg-primary/10 text-foreground'
+          {isOwner && (
+            <>
+              <Link
+                href="/admin/customers"
+                onClick={closeSidebar}
+                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] touch-manipulation ${
+                  pathname.startsWith('/admin/customers')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted'
+                }`}
+              >
+                <UserCircle size={22} className="shrink-0" />
+                <span className="truncate flex-1">Customers</span>
+              </Link>
+              <Link
+                href="/admin/team"
+              onClick={closeSidebar}
+              className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] touch-manipulation ${
+                pathname.startsWith('/admin/team')
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted'
               }`}
-              aria-expanded={settingsExpanded}
-              aria-controls="settings-submenu"
-            >
-              <Settings size={22} className="shrink-0" />
-              <span className="truncate flex-1 text-left">Settings</span>
-              {settingsExpanded ? (
-                <ChevronDown size={18} className="shrink-0 opacity-70" />
-              ) : (
-                <ChevronRight size={18} className="shrink-0 opacity-70" />
-              )}
-            </button>
+              >
+                <Users size={22} className="shrink-0" />
+                <span className="truncate flex-1">Team</span>
+              </Link>
+            </>
+          )}
+
+          {/* Settings: link to General + dropdown for sub-pages */}
+          <div className="pt-1">
+            <div className="flex items-center gap-0 rounded-lg overflow-hidden">
+              <Link
+                href="/admin/settings"
+                onClick={closeSidebar}
+                className={`flex items-center gap-3 flex-1 min-w-0 px-3 py-3 text-sm font-medium transition-colors min-h-[44px] touch-manipulation ${
+                  pathname === '/admin/settings'
+                    ? 'bg-primary text-primary-foreground'
+                    : isSettingsPath
+                      ? 'bg-primary/10 text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted'
+                }`}
+              >
+                <Settings size={22} className="shrink-0" />
+                <span className="truncate flex-1 text-left">Settings</span>
+              </Link>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsExpanded((e) => !e) }}
+                className={`flex items-center justify-center w-10 shrink-0 py-3 text-sm font-medium transition-colors min-h-[44px] touch-manipulation ${
+                  isSettingsPath
+                    ? 'bg-primary/10 text-foreground hover:bg-primary/20'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+                aria-expanded={settingsExpanded}
+                aria-controls="settings-submenu"
+                aria-label={settingsExpanded ? 'Collapse settings menu' : 'Expand settings menu'}
+              >
+                {settingsExpanded ? (
+                  <ChevronDown size={18} className="shrink-0 opacity-70" />
+                ) : (
+                  <ChevronRight size={18} className="shrink-0 opacity-70" />
+                )}
+              </button>
+            </div>
             <div
               id="settings-submenu"
               className={settingsExpanded ? 'block' : 'hidden'}
             >
               <div className="pl-4 pr-2 py-1 space-y-0.5 border-l-2 border-border ml-4 mt-0.5">
-                {SETTINGS_SUB_ITEMS.map(({ href, label, icon: SubIcon }) => {
+                {SETTINGS_SUB_ITEMS.map(({ href, label }) => {
                   const isActive = pathname === href
                   return (
                     <Link
@@ -147,7 +191,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                           : 'text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted'
                       }`}
                     >
-                      {SubIcon ? <SubIcon size={18} className="shrink-0" /> : <span className="w-[18px] shrink-0" />}
+                      <span className="w-[18px] shrink-0" />
                       <span className="truncate">{label}</span>
                     </Link>
                   )
@@ -171,7 +215,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 md:h-16 shrink-0 bg-background border-b border-border flex items-center justify-between gap-3 px-4 md:px-6">
+        <header className="relative z-[45] h-14 md:h-16 shrink-0 bg-background border-b border-border flex items-center justify-between gap-3 px-4 md:px-6">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"

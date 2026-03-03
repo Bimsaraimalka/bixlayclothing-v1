@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Package, Send, RotateCcw, CheckCircle, Eye, Download, Plus, Search } from 'lucide-react'
+import { Package, Send, RotateCcw, CheckCircle, Eye, Download, Plus, Search, X } from 'lucide-react'
 import { useAdminData } from '@/components/admin/admin-data-context'
 import { LoadingScreen } from '@/components/loading-screen'
 import { buildCsv, downloadCsv } from '@/lib/csv'
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-type Tab = 'queue' | 'sent' | 'completed' | 'returned'
+type Tab = 'queue' | 'sent' | 'completed' | 'returned' | 'cancelled'
 
 type OrderForDetails = {
   id: string
@@ -65,6 +65,7 @@ function paymentMethodLabel(method: string | null | undefined): string {
     case 'bank_transfer': return 'Bank transfer'
     case 'card': return 'Card'
     case 'cash_on_delivery': return 'Cash on delivery'
+    case 'payzy': return 'Payzy'
     default: return method
   }
 }
@@ -467,33 +468,86 @@ export function AdminOrders() {
     setDetailsOpen(true)
   }
 
-  const handleDownloadOrdersCsv = () => {
+  const handleDownloadOrdersCsv = async () => {
     const headers = [
-      'Order ID', 'Customer', 'Email', 'Phone', 'Address', 'City', 'State', 'ZIP Code', 'Country',
-      'Product', 'Color', 'Size', 'Quantity', 'Unit price', 'Amount', 'Status', 'Date', 'Payment', 'Promo code', 'Order from',
+      'Order ID',
+      'Customer',
+      'Email',
+      'Phone',
+      'Address',
+      'City',
+      'State',
+      'ZIP Code',
+      'Country',
+      'Payment method',
+      'Promo code',
+      'Order source',
+      'Order source (other)',
+      'Status',
+      'Date',
+      'Order total',
+      'Product name',
+      'Color',
+      'Size',
+      'Quantity',
+      'Unit price',
+      'Discount amount',
+      'Line total',
     ]
-    const rows = orders.map((o) => [
-      o.id,
-      o.customer,
-      o.email,
-      o.phone ?? '',
-      o.address ?? '',
-      o.city ?? '',
-      o.state ?? '',
-      o.zip_code ?? '',
-      o.country ?? '',
-      o.product_name ?? '',
-      o.color ?? '',
-      o.size ?? '',
-      o.quantity ?? '',
-      o.unit_price != null ? formatPrice(o.unit_price) : '',
-      o.amount,
-      o.status,
-      o.date,
-      paymentMethodLabel(o.payment_method),
-      o.promo_code ?? '',
-      orderSourceLabel(o.order_source, o.order_source_other),
-    ])
+    const rows: (string | number)[][] = []
+    for (const o of orders) {
+      const userFields = [
+        o.id,
+        o.customer,
+        o.email,
+        o.phone ?? '',
+        o.address ?? '',
+        o.city ?? '',
+        o.state ?? '',
+        o.zip_code ?? '',
+        o.country ?? '',
+        paymentMethodLabel(o.payment_method),
+        o.promo_code ?? '',
+        o.order_source ?? '',
+        o.order_source_other ?? '',
+        o.status,
+        o.date,
+        o.amount,
+      ]
+      const items = await fetchOrderItems(o.id)
+      if (items.length > 0) {
+        for (const it of items) {
+          rows.push([
+            ...userFields,
+            it.product_name ?? '',
+            it.color ?? '',
+            it.size ?? '',
+            it.quantity,
+            it.unit_price,
+            it.discount_amount,
+            it.line_total,
+          ])
+        }
+      } else {
+        // Legacy order with product on order row
+        const qty = o.quantity ?? ''
+        const up = o.unit_price != null ? o.unit_price : ''
+        const lineTotal =
+          typeof o.quantity === 'number' && typeof o.unit_price === 'number'
+            ? o.quantity * o.unit_price
+            : ''
+        rows.push([
+          ...userFields,
+          o.product_name ?? '',
+          o.color ?? '',
+          o.size ?? '',
+          qty,
+          up,
+          '',
+          lineTotal,
+        ])
+      }
+    }
     const csv = buildCsv(headers, rows)
     downloadCsv(csv, `orders-${new Date().toISOString().slice(0, 10)}.csv`)
   }
@@ -502,6 +556,7 @@ export function AdminOrders() {
   const sent = orders.filter((o) => o.status === 'Shipped')
   const completed = orders.filter((o) => o.status === 'Completed')
   const returned = orders.filter((o) => o.status === 'Returned')
+  const cancelled = orders.filter((o) => o.status === 'Cancelled')
 
   const filterBySearch = <T extends { id: string; customer: string; email: string }>(list: T[]) =>
     search.trim()
@@ -517,6 +572,7 @@ export function AdminOrders() {
   const sentFiltered = filterBySearch(sent)
   const completedFiltered = filterBySearch(completed)
   const returnedFiltered = filterBySearch(returned)
+  const cancelledFiltered = filterBySearch(cancelled)
 
   const totalRevenue = orders
     .filter((o) => o.status === 'Completed' || o.status === 'Shipped')
@@ -527,6 +583,7 @@ export function AdminOrders() {
     { key: 'sent', label: 'Shipped', count: sent.length, icon: Send },
     { key: 'completed', label: 'Completed', count: completed.length, icon: CheckCircle },
     { key: 'returned', label: 'Returned', count: returned.length, icon: RotateCcw },
+    { key: 'cancelled', label: 'Cancelled', count: cancelled.length, icon: X },
   ]
 
   if (loading) {
@@ -851,12 +908,13 @@ export function AdminOrders() {
                 <label className="text-sm text-muted-foreground block mb-1">Payment method</label>
                 <select
                   value={addForm.paymentMethod}
-                  onChange={(e) => setAddForm((prev) => ({ ...prev, paymentMethod: e.target.value as 'bank_transfer' | 'card' | 'cash_on_delivery' }))}
+                  onChange={(e) => setAddForm((prev) => ({ ...prev, paymentMethod: e.target.value as 'bank_transfer' | 'card' | 'cash_on_delivery' | 'payzy' }))}
                   className="w-full min-h-[44px] px-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="bank_transfer">Bank transfer</option>
                   <option value="card">Visa, Debit & Mastercard</option>
                   <option value="cash_on_delivery">Cash on delivery</option>
+                  <option value="payzy">Payzy</option>
                 </select>
               </div>
             </div>
@@ -944,7 +1002,7 @@ export function AdminOrders() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <div className="bg-background border border-border rounded-xl shadow-sm p-4 sm:p-5 text-center min-h-[72px] flex flex-col justify-center">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">In queue</p>
           <p className="text-xl sm:text-2xl font-semibold text-foreground">{inQueue.length}</p>
@@ -961,7 +1019,11 @@ export function AdminOrders() {
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Returned</p>
           <p className="text-xl sm:text-2xl font-semibold text-amber-600 dark:text-amber-400">{returned.length}</p>
         </div>
-        <div className="bg-background border border-border rounded-xl shadow-sm p-4 sm:p-5 text-center min-h-[72px] flex flex-col justify-center col-span-2 lg:col-span-1">
+        <div className="bg-background border border-border rounded-xl shadow-sm p-4 sm:p-5 text-center min-h-[72px] flex flex-col justify-center">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Cancelled</p>
+          <p className="text-xl sm:text-2xl font-semibold text-destructive">{cancelled.length}</p>
+        </div>
+        <div className="bg-background border border-border rounded-xl shadow-sm p-4 sm:p-5 text-center min-h-[72px] flex flex-col justify-center col-span-2 sm:col-span-3 lg:col-span-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Revenue</p>
           <p className="text-xl sm:text-2xl font-semibold text-emerald-600 dark:text-emerald-400">Rs. {Math.round(totalRevenue)}</p>
         </div>
@@ -1023,6 +1085,16 @@ export function AdminOrders() {
             updateOrderStatus={updateOrderStatus}
             orderStatuses={orderStatuses}
             emptyMessage="No returned orders."
+            onViewOrder={handleViewOrder}
+            statusStyle={statusStyle}
+          />
+        )}
+        {tab === 'cancelled' && (
+          <OrderTable
+            orders={cancelledFiltered}
+            updateOrderStatus={updateOrderStatus}
+            orderStatuses={orderStatuses}
+            emptyMessage="No cancelled orders."
             onViewOrder={handleViewOrder}
             statusStyle={statusStyle}
           />

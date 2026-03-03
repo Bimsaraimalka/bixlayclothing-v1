@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase'
-import type { AdminProduct, AdminOrder, OrderItem, ProductTemplate, ProductCategory, PromoCode } from '@/lib/admin-data'
+import type { AdminProduct, AdminOrder, OrderItem, ProductTemplate, ProductCategory, PromoCode, StoreSettings } from '@/lib/admin-data'
 
 type ProductRow = {
   id: number
@@ -18,6 +18,7 @@ type ProductRow = {
   image_urls?: string[] | unknown
   details?: string[] | unknown
   benefits?: { title: string; description?: string }[] | unknown
+  shipping_cost?: number | null
   created_at?: string
 }
 
@@ -45,6 +46,8 @@ type OrderRow = {
   order_source?: string | null
   order_source_other?: string | null
   created_at?: string
+  payzy_amount?: number | null
+  payzy_freight?: number | null
 }
 
 type OrderItemRow = {
@@ -123,6 +126,7 @@ function toAdminProduct(r: ProductRow): AdminProduct {
     image_urls: parseJsonStringArray(r.image_urls),
     details: parseJsonStringArray(r.details),
     benefits: parseBenefits(r.benefits),
+    shipping_cost: r.shipping_cost != null && !Number.isNaN(Number(r.shipping_cost)) ? Number(r.shipping_cost) : null,
   }
 }
 
@@ -236,7 +240,13 @@ export async function addOrderWithItems(
     const line = Math.max(0, it.quantity * it.unit_price - (it.discount_amount ?? 0))
     return sum + line
   }, 0)
-  const amountStr = totalAmount > 0 ? `Rs. ${Math.round(totalAmount).toLocaleString('en-IN')}` : order.amount
+  // Use order.amount when provided (e.g. checkout total with shipping/tax), else derive from line items
+  const amountStr =
+    typeof order.amount === 'string' && order.amount.trim()
+      ? order.amount
+      : totalAmount > 0
+        ? `Rs. ${Math.round(totalAmount).toLocaleString('en-IN')}`
+        : order.amount
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
     .insert({
@@ -282,7 +292,7 @@ export async function fetchProducts(): Promise<AdminProduct[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits, created_at')
+    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits, shipping_cost, created_at')
     .order('id', { ascending: true })
   if (error) throw error
   return (data ?? []).map((r) => toAdminProduct(r as ProductRow))
@@ -292,7 +302,7 @@ export async function fetchProductById(id: string): Promise<AdminProduct | null>
   const supabase = createClient()
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits, created_at')
+    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits, shipping_cost, created_at')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
@@ -325,6 +335,8 @@ export type DbCartItem = {
   quantity: number
   size: string
   color: string
+  /** Per-line shipping cost (from product or default at add time). */
+  shipping_cost?: number | null
 }
 
 type CartItemRow = {
@@ -336,6 +348,7 @@ type CartItemRow = {
   color: string
   quantity: number
   price: number
+  shipping_cost?: number | null
 }
 
 function toDbCartItem(r: CartItemRow): DbCartItem {
@@ -346,6 +359,7 @@ function toDbCartItem(r: CartItemRow): DbCartItem {
     quantity: Number(r.quantity),
     size: r.size ?? '',
     color: r.color ?? '',
+    shipping_cost: r.shipping_cost != null && !Number.isNaN(Number(r.shipping_cost)) ? Number(r.shipping_cost) : null,
   }
 }
 
@@ -356,7 +370,7 @@ export async function fetchCartItems(): Promise<DbCartItem[]> {
   if (!user?.id) return []
   const { data, error } = await supabase
     .from('cart_items')
-    .select('id, user_id, product_id, product_name, size, color, quantity, price')
+    .select('id, user_id, product_id, product_name, size, color, quantity, price, shipping_cost')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: true })
   if (error) return []
@@ -364,7 +378,7 @@ export async function fetchCartItems(): Promise<DbCartItem[]> {
 }
 
 /** Add or update cart line for authenticated user. Merges quantity if line exists. */
-export async function addCartItem(item: { id: string; name: string; price: number; size: string; color: string; quantity?: number }): Promise<{ error: string | null }> {
+export async function addCartItem(item: { id: string; name: string; price: number; size: string; color: string; quantity?: number; shipping_cost?: number | null }): Promise<{ error: string | null }> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.id) return { error: 'Not logged in' }
@@ -392,6 +406,7 @@ export async function addCartItem(item: { id: string; name: string; price: numbe
     color: item.color ?? '',
     quantity: qty,
     price: item.price,
+    shipping_cost: item.shipping_cost != null && item.shipping_cost >= 0 ? item.shipping_cost : null,
   })
   return error ? { error: error.message } : { error: null }
 }
@@ -453,11 +468,40 @@ export async function fetchOrders(): Promise<AdminOrder[]> {
   return (data ?? []).map((r) => toAdminOrder(r as OrderRow))
 }
 
+/** Fetch a single order by numeric id (e.g. for Payzy callback). */
+export async function fetchOrderByNumericId(numericId: number): Promise<OrderRow | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, customer, email, amount, status, date, promo_code, payment_method, phone, address, city, state, zip_code, country, order_source, order_source_other, payzy_amount, payzy_freight')
+    .eq('id', numericId)
+    .single()
+  if (error || !data) return null
+  return data as OrderRow
+}
+
+/** Set Payzy numeric amount/freight for callback verification (call after creating a Payzy order). */
+export async function updateOrderPayzyMeta(
+  orderDisplayId: string,
+  payzyAmount: number,
+  payzyFreight: number
+): Promise<void> {
+  const id = parseOrderId(orderDisplayId)
+  if (id == null) throw new Error('Invalid order id')
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('orders')
+    .update({ payzy_amount: payzyAmount, payzy_freight: payzyFreight })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function addProductSupabase(
-  p: Omit<AdminProduct, 'id' | 'status'>
+  p: Omit<AdminProduct, 'id'>
 ): Promise<AdminProduct> {
   const supabase = createClient()
-  const status = p.stock > 0 ? 'Active' : 'Out of Stock'
+  const status =
+    p.status === 'Out of Stock' ? 'Out of Stock' : p.stock > 0 ? 'Active' : 'Out of Stock'
   const segment = p.segment === 'Men' || p.segment === 'Women' || p.segment === 'Unisex' ? p.segment : 'Unisex'
   const { data, error } = await supabase
     .from('products')
@@ -477,8 +521,9 @@ export async function addProductSupabase(
       image_urls: Array.isArray(p.image_urls) ? p.image_urls : [],
       details: Array.isArray(p.details) ? p.details : [],
       benefits: Array.isArray(p.benefits) ? p.benefits : [],
+      shipping_cost: p.shipping_cost != null && p.shipping_cost >= 0 ? p.shipping_cost : null,
     })
-    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits')
+    .select('id, name, category, price, stock, status, colors, sizes, unisex, segment, new_arrival, discount_percent, promo_code, image_urls, details, benefits, shipping_cost')
     .single()
   if (error) throw error
   return toAdminProduct({ ...data, colors: data.colors ?? [], sizes: data.sizes ?? [] } as ProductRow)
@@ -493,8 +538,10 @@ export async function updateProductSupabase(
   if (updates.name !== undefined) payload.name = updates.name
   if (updates.category !== undefined) payload.category = updates.category
   if (updates.price !== undefined) payload.price = updates.price
-  if (updates.stock !== undefined) {
-    payload.stock = updates.stock
+  if (updates.stock !== undefined) payload.stock = updates.stock
+  if (updates.status !== undefined) {
+    payload.status = updates.status
+  } else if (updates.stock !== undefined) {
     payload.status = updates.stock > 0 ? 'Active' : 'Out of Stock'
   }
   if (updates.colors !== undefined) payload.colors = updates.colors
@@ -507,6 +554,7 @@ export async function updateProductSupabase(
   if (updates.image_urls !== undefined) payload.image_urls = Array.isArray(updates.image_urls) ? updates.image_urls : []
   if (updates.details !== undefined) payload.details = Array.isArray(updates.details) ? updates.details : []
   if (updates.benefits !== undefined) payload.benefits = Array.isArray(updates.benefits) ? updates.benefits : []
+  if (updates.shipping_cost !== undefined) payload.shipping_cost = updates.shipping_cost != null && updates.shipping_cost >= 0 ? updates.shipping_cost : null
   if (Object.keys(payload).length === 0) return
   const { error } = await supabase.from('products').update(payload).eq('id', id)
   if (error) throw error
@@ -515,6 +563,52 @@ export async function updateProductSupabase(
 export async function removeProductSupabase(id: string): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('products').delete().eq('id', id)
+  if (error) throw error
+}
+
+type StoreSettingsRow = {
+  id: number
+  default_shipping: number
+  free_shipping_threshold: number
+  tax_enabled: boolean
+  tax_rate: number
+  contact_phone?: string | null
+  contact_phone_visible?: boolean
+  updated_at?: string
+}
+
+export async function fetchStoreSettings(): Promise<StoreSettings | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('store_settings')
+    .select('default_shipping, free_shipping_threshold, tax_enabled, tax_rate, contact_phone, contact_phone_visible')
+    .eq('id', 1)
+    .maybeSingle()
+  if (error) return null
+  if (!data) return null
+  const r = data as StoreSettingsRow
+  return {
+    default_shipping: Number(r.default_shipping),
+    free_shipping_threshold: Number(r.free_shipping_threshold),
+    tax_enabled: r.tax_enabled === true,
+    tax_rate: Number(r.tax_rate),
+    contact_phone: r.contact_phone ?? null,
+    contact_phone_visible: r.contact_phone_visible === true,
+  }
+}
+
+export async function updateStoreSettingsSupabase(updates: Partial<StoreSettings>): Promise<void> {
+  const supabase = createClient()
+  const payload: Record<string, unknown> = {}
+  if (updates.default_shipping !== undefined) payload.default_shipping = Math.max(0, updates.default_shipping)
+  if (updates.free_shipping_threshold !== undefined) payload.free_shipping_threshold = Math.max(0, updates.free_shipping_threshold)
+  if (updates.tax_enabled !== undefined) payload.tax_enabled = updates.tax_enabled === true
+  if (updates.tax_rate !== undefined) payload.tax_rate = Math.max(0, Math.min(1, updates.tax_rate))
+  if (updates.contact_phone !== undefined) payload.contact_phone = updates.contact_phone === '' ? null : updates.contact_phone
+  if (updates.contact_phone_visible !== undefined) payload.contact_phone_visible = updates.contact_phone_visible === true
+  if (Object.keys(payload).length === 0) return
+  payload.updated_at = new Date().toISOString()
+  const { error } = await supabase.from('store_settings').update(payload).eq('id', 1)
   if (error) throw error
 }
 

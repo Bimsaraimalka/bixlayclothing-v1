@@ -17,13 +17,12 @@ export default function AdminLoginPage() {
     return null
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     const trimmedEmail = email.trim()
-    const ok = login(trimmedEmail, password)
+    const ok = await login(trimmedEmail, password)
     if (ok) {
-      // Full page navigation so auth state is read from storage on load
       window.location.href = '/admin'
     } else {
       setError('Invalid email or password.')
@@ -49,7 +48,7 @@ export default function AdminLoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@bixlay.com"
+              placeholder="you@example.com"
               className="w-full min-h-[44px] px-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base sm:text-sm touch-manipulation"
               required
             />
@@ -75,9 +74,6 @@ export default function AdminLoginPage() {
             Sign in
           </Button>
         </form>
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          Demo: admin@bixlay.com / admin123
-        </p>
       </div>
     </div>
   )

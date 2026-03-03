@@ -29,6 +29,7 @@ function paymentLabel(method: string | null | undefined): string {
     case 'bank_transfer': return 'Bank transfer'
     case 'card': return 'Card'
     case 'cash_on_delivery': return 'Cash on delivery'
+    case 'payzy': return 'Payzy'
     default: return method
   }
 }
