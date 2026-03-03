@@ -46,6 +46,8 @@ type OrderRow = {
   order_source?: string | null
   order_source_other?: string | null
   created_at?: string
+  payzy_amount?: number | null
+  payzy_freight?: number | null
 }
 
 type OrderItemRow = {
@@ -464,6 +466,34 @@ export async function fetchOrders(): Promise<AdminOrder[]> {
     .order('id', { ascending: false })
   if (error) throw error
   return (data ?? []).map((r) => toAdminOrder(r as OrderRow))
+}
+
+/** Fetch a single order by numeric id (e.g. for Payzy callback). */
+export async function fetchOrderByNumericId(numericId: number): Promise<OrderRow | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, customer, email, amount, status, date, promo_code, payment_method, phone, address, city, state, zip_code, country, order_source, order_source_other, payzy_amount, payzy_freight')
+    .eq('id', numericId)
+    .single()
+  if (error || !data) return null
+  return data as OrderRow
+}
+
+/** Set Payzy numeric amount/freight for callback verification (call after creating a Payzy order). */
+export async function updateOrderPayzyMeta(
+  orderDisplayId: string,
+  payzyAmount: number,
+  payzyFreight: number
+): Promise<void> {
+  const id = parseOrderId(orderDisplayId)
+  if (id == null) throw new Error('Invalid order id')
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('orders')
+    .update({ payzy_amount: payzyAmount, payzy_freight: payzyFreight })
+    .eq('id', id)
+  if (error) throw error
 }
 
 export async function addProductSupabase(

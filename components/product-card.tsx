@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 
 export type ProductCardProduct = {
@@ -17,6 +18,8 @@ export type ProductCardProduct = {
   isNew?: boolean
   soldOut?: boolean
   topSelling?: boolean
+  /** Available sizes for size selection buttons */
+  sizes?: string[]
 }
 
 type ProductCardProps = {
@@ -38,6 +41,7 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
   const priceLabel = hasSinglePrice
     ? formatPrice(product.price!)
     : formatPrice(product.priceMin!)
+  const effectivePrice = product.price ?? product.priceMin ?? 0
   const isCompact = variant === 'compact'
 
   return (
@@ -112,11 +116,11 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
             {product.category}
           </p>
           <p
-            className={`font-sans font-bold text-foreground ${isCompact ? 'text-xs pt-0.5' : 'text-xs sm:text-sm pt-0.5 sm:pt-1'}`}
+            className={`font-sans font-bold text-foreground ${isCompact ? 'text-xs pt-0.5' : 'text-base pt-0.5 sm:pt-1'}`}
           >
             {showBeforeNow ? (
               <>
-                <span className="line-through text-muted-foreground font-normal mr-1">
+                <span className="line-through text-muted-foreground font-normal mr-1 text-sm sm:text-base">
                   {formatPrice(product.originalPrice!)}
                 </span>
                 {formatPrice(product.price!)}
@@ -125,6 +129,29 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
               priceLabel
             )}
           </p>
+          {!isCompact && (product.price ?? product.priceMin) != null && (
+            <div className="space-y-1 pt-1">
+              <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-1">
+                or up to 4 x {formatPrice(Math.round(effectivePrice / 4))}{' '}
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  with{' '}
+                  <Image src="/payzy-logo.png" alt="PayZy" width={48} height={14} className="inline-block h-3.5 w-auto object-contain align-middle" />
+                </span>
+              </p>
+            </div>
+          )}
+          {!isCompact && product.sizes && product.sizes.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              {product.sizes.map((size) => (
+                <span
+                  key={size}
+                  className="min-w-[32px] min-h-[32px] px-2 py-1.5 rounded-lg border border-border bg-background text-primary font-medium text-xs flex items-center justify-center"
+                >
+                  {size}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </Link>
     </div>

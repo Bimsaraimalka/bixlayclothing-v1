@@ -1,16 +1,25 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
+import { useCart } from '@/components/cart-context'
 import type { StoreSettings } from '@/lib/admin-data'
 
 function SuccessContent({ storeSettings }: { storeSettings: StoreSettings }) {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('order') ?? ''
+  const { clearCart } = useCart()
+  const clearedRef = useRef(false)
+  useEffect(() => {
+    if (orderId && !clearedRef.current) {
+      clearedRef.current = true
+      clearCart()
+    }
+  }, [orderId, clearCart])
   const showPhone = storeSettings.contact_phone_visible && storeSettings.contact_phone && storeSettings.contact_phone.trim() !== ''
 
   return (

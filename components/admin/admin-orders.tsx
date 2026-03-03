@@ -65,6 +65,7 @@ function paymentMethodLabel(method: string | null | undefined): string {
     case 'bank_transfer': return 'Bank transfer'
     case 'card': return 'Card'
     case 'cash_on_delivery': return 'Cash on delivery'
+    case 'payzy': return 'Payzy'
     default: return method
   }
 }
@@ -907,12 +908,13 @@ export function AdminOrders() {
                 <label className="text-sm text-muted-foreground block mb-1">Payment method</label>
                 <select
                   value={addForm.paymentMethod}
-                  onChange={(e) => setAddForm((prev) => ({ ...prev, paymentMethod: e.target.value as 'bank_transfer' | 'card' | 'cash_on_delivery' }))}
+                  onChange={(e) => setAddForm((prev) => ({ ...prev, paymentMethod: e.target.value as 'bank_transfer' | 'card' | 'cash_on_delivery' | 'payzy' }))}
                   className="w-full min-h-[44px] px-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="bank_transfer">Bank transfer</option>
                   <option value="card">Visa, Debit & Mastercard</option>
                   <option value="cash_on_delivery">Cash on delivery</option>
+                  <option value="payzy">Payzy</option>
                 </select>
               </div>
             </div>
