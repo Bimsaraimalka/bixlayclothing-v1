@@ -77,6 +77,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   }, [])
 
   const signOut = useCallback(async () => {
+    setUser(null)
     try {
       const supabase = createClient()
       await supabase.auth.signOut()

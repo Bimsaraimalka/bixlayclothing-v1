@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProviderWithDrawer } from '@/components/cart-provider-with-drawer'
 import { CustomerAuthProvider } from '@/components/customer-auth-context'
+import { CookieConsent } from '@/components/cookie-consent'
 import { BASE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/lib/site'
 import './globals.css'
 
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       { url: '/og-image.png', width: 1200, height: 630, alt: SITE_NAME },
-      { url: '/icon.svg', type: 'image/svg+xml', alt: SITE_NAME },
+      { url: '/falcon-new.png', alt: SITE_NAME },
     ],
   },
   twitter: {
@@ -59,14 +60,13 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true },
   },
   icons: {
-    icon: [
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/falcon-new.png',
+    apple: '/falcon-new.png',
   },
   alternates: { canonical: BASE_URL ?? '/' },
+  other: {
+    'google-adsense-account': 'ca-pub-7938979901855907',
+  },
 }
 
 export default function RootLayout({
@@ -83,6 +83,7 @@ export default function RootLayout({
           </CartProviderWithDrawer>
         </CustomerAuthProvider>
         <Analytics />
+        <CookieConsent />
       </body>
     </html>
   )

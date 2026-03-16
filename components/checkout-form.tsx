@@ -1,25 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/components/cart-context'
-import { addOrderSupabase } from '@/lib/supabase-data'
+import { addOrderWithItems } from '@/lib/supabase-data'
 import { sendNewOrderNotification } from '@/app/actions/notify-new-order'
+import { getStoreSettings } from '@/app/actions/store-settings'
+import type { StoreSettings } from '@/lib/admin-data'
 import { CreditCard, Building2, Banknote, HelpCircle } from 'lucide-react'
 
-const FREE_SHIPPING_THRESHOLD = 5000
-const SHIPPING = 399
-const TAX_RATE = 0.1
 const CARD_PROCESSING_FEE = 100
+const DEFAULT_SHIPPING = 399
+const DEFAULT_FREE_THRESHOLD = 5000
+const DEFAULT_TAX_RATE = 0.1
 
-export type PaymentMethod = 'bank_transfer' | 'card' | 'cash_on_delivery'
+export type PaymentMethod = 'bank_transfer' | 'card' | 'cash_on_delivery' | 'payzy'
 
 export function CheckoutForm() {
   const router = useRouter()
   const { items, clearCart, appliedPromo } = useCart()
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_delivery')
   const [formData, setFormData] = useState({
     firstName: '',
@@ -40,6 +44,17 @@ export function CheckoutForm() {
     cardCVC: '',
   })
 
+  useEffect(() => {
+    getStoreSettings().then(setStoreSettings)
+  }, [])
+
+  const settings = storeSettings ?? {
+    default_shipping: DEFAULT_SHIPPING,
+    free_shipping_threshold: DEFAULT_FREE_THRESHOLD,
+    tax_enabled: true,
+    tax_rate: DEFAULT_TAX_RATE,
+  }
+
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
   const discountAmount = appliedPromo
     ? appliedPromo.discount_type === 'percent'
@@ -47,10 +62,12 @@ export function CheckoutForm() {
       : Math.min(appliedPromo.discount_value, subtotal)
     : 0
   const afterDiscount = Math.max(0, subtotal - discountAmount)
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING
-  const tax = Math.round(afterDiscount * TAX_RATE)
+  const shippingTotal = afterDiscount >= settings.free_shipping_threshold
+    ? 0
+    : items.reduce((sum, i) => sum + (i.shipping_cost ?? settings.default_shipping) * i.quantity, 0)
+  const tax = settings.tax_enabled ? Math.round(afterDiscount * settings.tax_rate) : 0
   const cardProcessingFee = paymentMethod === 'card' ? CARD_PROCESSING_FEE : 0
-  const total = afterDiscount + shipping + tax + cardProcessingFee
+  const total = afterDiscount + shippingTotal + tax + cardProcessingFee
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target
@@ -69,7 +86,7 @@ export function CheckoutForm() {
     try {
       const customer = `${formData.firstName.trim()} ${formData.lastName.trim()}`
       const addressLine = [formData.address.trim(), formData.apartment.trim()].filter(Boolean).join(', ') || null
-      const order = await addOrderSupabase({
+      const orderPayload = {
         customer,
         email: formData.email.trim(),
         amount: formatPrice(total),
@@ -83,7 +100,17 @@ export function CheckoutForm() {
         state: formData.state.trim() || null,
         zip_code: formData.zipCode.trim() || null,
         country: formData.country.trim() || 'Sri Lanka',
-      })
+      }
+      const orderItems = items.map((i) => ({
+        product_id: i.id,
+        product_name: i.name,
+        color: i.color || null,
+        size: i.size || null,
+        quantity: i.quantity,
+        unit_price: i.price,
+        discount_amount: 0,
+      }))
+      const order = await addOrderWithItems(orderPayload, orderItems)
       sendNewOrderNotification({
         id: order.id,
         customer: order.customer,
@@ -254,34 +281,36 @@ export function CheckoutForm() {
               {/* Shipping method */}
               <div className="border border-border rounded-lg p-4 sm:p-6 space-y-4 bg-background">
                 <h2 className="text-lg font-semibold text-foreground">Shipping method</h2>
-                <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/30">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 border border-border rounded-lg bg-muted/30">
                   <div>
                     <p className="font-medium text-foreground">Standard</p>
                     <p className="text-sm text-muted-foreground">2-3 Business Days</p>
                   </div>
-                  <span className="font-medium text-foreground">{formatPrice(shipping)}</span>
+                  <span className="font-medium text-foreground sm:shrink-0">{formatPrice(shippingTotal)}</span>
                 </div>
               </div>
 
               <div className="border border-border rounded-lg p-4 sm:p-6 space-y-4 sm:space-y-6 bg-background">
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-primary">
-                  Payment method
-                </h2>
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-foreground">Payment</h2>
+                  <p className="text-sm text-muted-foreground">All transactions are secure and encrypted.</p>
+                </div>
                 <fieldset className="space-y-3">
                   <legend className="sr-only">Choose payment method</legend>
-                  <label className="flex items-center gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
+                  <label className="flex items-center gap-2 sm:gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="bank_transfer"
                       checked={paymentMethod === 'bank_transfer'}
                       onChange={() => setPaymentMethod('bank_transfer')}
-                      className="w-5 h-5 text-primary border-border"
+                      className="w-5 h-5 shrink-0 text-primary border-border"
                     />
                     <Building2 size={20} className="text-muted-foreground shrink-0" />
-                    <span className="text-base font-medium">1. Bank transfer</span>
+                    <span className="text-base font-medium min-w-0">Bank transfer</span>
                   </label>
-                  <label className="flex items-center gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
+                  {/* Payment option 2 (card) hidden for now
+                  <label className="flex items-center gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -291,19 +320,53 @@ export function CheckoutForm() {
                       className="w-5 h-5 text-primary border-border"
                     />
                     <CreditCard size={20} className="text-muted-foreground shrink-0" />
-                    <span className="text-base font-medium">2. Visa, Debit & Mastercard</span>
+                    <span className="text-base font-medium">Visa, Debit & Mastercard</span>
                   </label>
-                  <label className="flex items-center gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
+                  */}
+                  {/* Payzy - single radio, responsive layout */}
+                  <div
+                    className={`rounded-lg border transition-colors ${
+                      paymentMethod === 'payzy'
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                        : 'border-border'
+                    }`}
+                  >
+                    <label className="block cursor-pointer touch-manipulation hover:bg-secondary/50">
+                      <div className="flex items-center gap-2 sm:gap-3 p-4">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="payzy"
+                          checked={paymentMethod === 'payzy'}
+                          onChange={() => setPaymentMethod('payzy')}
+                          className="w-5 h-5 shrink-0 text-primary border-border"
+                        />
+                        <Image src="/payzy-logo.png" alt="Payzy" width={60} height={24} className="h-6 w-[60px] shrink-0 object-contain" />
+                        <span className="text-base font-medium flex-1 min-w-0 md:hidden">Payzy</span>
+                        <span className="text-base font-medium flex-1 min-w-0 hidden md:inline">Payzy split in up to 4</span>
+                        <span className="flex items-center gap-1.5 shrink-0" aria-label="VISA and Mastercard">
+                          <Image src="/visa.svg" alt="Visa" width={38} height={24} className="h-5 sm:h-6 w-auto object-contain" />
+                          <Image src="/master.svg" alt="Mastercard" width={38} height={24} className="h-5 sm:h-6 w-auto object-contain" />
+                        </span>
+                      </div>
+                      {paymentMethod === 'payzy' && (
+                        <div className="px-4 pb-4 pt-0 text-center border-t border-border/50">
+                          <p className="text-sm text-foreground pt-4">You&apos;ll be redirected to Payzy split in up to 4 to complete your purchase.</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                  <label className="flex items-center gap-2 sm:gap-3 p-4 border border-border rounded-lg cursor-pointer touch-manipulation hover:bg-secondary/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:ring-2 has-[:checked]:ring-primary/20 transition-colors">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="cash_on_delivery"
                       checked={paymentMethod === 'cash_on_delivery'}
                       onChange={() => setPaymentMethod('cash_on_delivery')}
-                      className="w-5 h-5 text-primary border-border"
+                      className="w-5 h-5 shrink-0 text-primary border-border"
                     />
                     <Banknote size={20} className="text-muted-foreground shrink-0" />
-                    <span className="text-base font-medium">3. Cash on delivery</span>
+                    <span className="text-base font-medium min-w-0">Cash on delivery</span>
                   </label>
                 </fieldset>
 
@@ -364,17 +427,17 @@ export function CheckoutForm() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="border border-border rounded-lg p-4 sm:p-6 bg-secondary space-y-4 sm:space-y-6 sticky top-20">
+            <div className="border border-border rounded-lg p-4 sm:p-6 bg-secondary space-y-4 sm:space-y-6 lg:sticky lg:top-20">
               <h2 className="text-lg sm:text-xl font-serif font-bold text-primary">
                 Order Summary
               </h2>
               <div className="space-y-4 border-b border-border pb-4">
                 {items.map((item) => (
-                  <div key={`${item.id}-${item.size}-${item.color}`} className="flex justify-between text-foreground/80">
-                    <span className="text-sm">
+                  <div key={`${item.id}-${item.size}-${item.color}`} className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-0.5 text-foreground/80">
+                    <span className="text-sm min-w-0 break-words">
                       {item.name} ({item.size} · {item.color}) ×{item.quantity}
                     </span>
-                    <span className="text-sm font-medium">{formatPrice(item.price * item.quantity)}</span>
+                    <span className="text-sm font-medium shrink-0">{formatPrice(item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>
@@ -391,12 +454,14 @@ export function CheckoutForm() {
                 )}
                 <div className="flex justify-between text-foreground/80">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? <span className="text-accent font-medium">Free</span> : formatPrice(shipping)}</span>
+                  <span>{shippingTotal === 0 ? <span className="text-accent font-medium">Free</span> : formatPrice(shippingTotal)}</span>
                 </div>
-                <div className="flex justify-between text-foreground/80">
-                  <span>Tax</span>
-                  <span>{formatPrice(tax)}</span>
-                </div>
+                {settings.tax_enabled && (
+                  <div className="flex justify-between text-foreground/80">
+                    <span>Tax</span>
+                    <span>{formatPrice(tax)}</span>
+                  </div>
+                )}
                 {cardProcessingFee > 0 && (
                   <div className="flex justify-between text-foreground/80">
                     <span>Card processing fee</span>
@@ -404,9 +469,9 @@ export function CheckoutForm() {
                   </div>
                 )}
               </div>
-              <div className="border-t border-border pt-4 flex justify-between text-lg">
+              <div className="border-t border-border pt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-lg">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="font-bold text-primary text-2xl">{formatPrice(total)}</span>
+                <span className="font-bold text-primary text-xl sm:text-2xl">{formatPrice(total)}</span>
               </div>
             </div>
           </div>

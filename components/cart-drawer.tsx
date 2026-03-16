@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { X, Trash2, Plus, Minus, Tag } from 'lucide-react'
 import { useCart } from '@/components/cart-context'
 import { validatePromoCode } from '@/app/actions/promo'
+import { getStoreSettings } from '@/app/actions/store-settings'
+import type { StoreSettings } from '@/lib/admin-data'
 import { useCartProductImages } from '@/hooks/use-cart-product-images'
 import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -23,18 +25,35 @@ import {
 export function CartDrawer() {
   const { isOpen, closeCart, items, itemCount, updateQuantity, removeItem, appliedPromo, setAppliedPromo } = useCart()
   const productImages = useCartProductImages(items)
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null)
   const [itemToRemove, setItemToRemove] = useState<string | null>(null)
   const [promoInput, setPromoInput] = useState('')
   const [promoError, setPromoError] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
 
+  useEffect(() => {
+    getStoreSettings().then(setStoreSettings)
+  }, [])
+
+  // Refetch store settings when drawer opens so tax enable/disable from admin is reflected
+  useEffect(() => {
+    if (isOpen) getStoreSettings().then(setStoreSettings)
+  }, [isOpen])
+
+  const settings = storeSettings ?? { default_shipping: 399, free_shipping_threshold: 5000, tax_enabled: true, tax_rate: 0.1 }
+
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const shippingTotal = subtotal >= settings.free_shipping_threshold
+    ? 0
+    : items.reduce((sum, i) => sum + (i.shipping_cost ?? settings.default_shipping) * i.quantity, 0)
   const discountAmount = appliedPromo
     ? appliedPromo.discount_type === 'percent'
       ? Math.round(subtotal * (appliedPromo.discount_value / 100))
       : Math.min(appliedPromo.discount_value, subtotal)
     : 0
-  const total = Math.max(0, subtotal - discountAmount)
+  const afterDiscount = Math.max(0, subtotal - discountAmount)
+  const tax = settings.tax_enabled ? Math.round(afterDiscount * settings.tax_rate) : 0
+  const total = afterDiscount + shippingTotal + tax
 
   const handleApplyPromo = async () => {
     const code = promoInput.trim()
@@ -224,6 +243,18 @@ export function CartDrawer() {
               <div className="flex justify-between text-sm sm:text-base text-accent font-medium">
                 <span>Discount ({appliedPromo.code})</span>
                 <span>-{formatPrice(discountAmount)}</span>
+              </div>
+            )}
+            {shippingTotal > 0 && (
+              <div className="flex justify-between text-sm sm:text-base text-foreground/80">
+                <span>Shipping</span>
+                <span>{formatPrice(shippingTotal)}</span>
+              </div>
+            )}
+            {settings.tax_enabled && (
+              <div className="flex justify-between text-sm sm:text-base text-foreground/80">
+                <span>Tax</span>
+                <span>{formatPrice(tax)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm sm:text-base font-bold">

@@ -56,7 +56,7 @@ export const FeaturedProducts = () => {
   const mobileStripAnimated = [...mobileStripCards, ...mobileStripCards]
 
   return (
-    <section className="w-full py-12 sm:py-16 lg:py-20 bg-white">
+    <section className="w-full min-h-[390px] py-6 sm:py-8 lg:py-10 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-12">
           <p className="font-serif text-foreground/60 text-xs sm:text-sm uppercase tracking-[0.2em] mb-1.5 sm:mb-2">

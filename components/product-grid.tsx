@@ -17,6 +17,7 @@ function toCardProduct(p: {
   new_arrival?: boolean
   image_urls?: string[]
   discount_percent?: number | null
+  sizes?: string[]
 }): ProductCardProduct {
   const discount = p.discount_percent != null && p.discount_percent > 0 && p.discount_percent < 100
     ? p.discount_percent
@@ -34,6 +35,7 @@ function toCardProduct(p: {
     imageUrl: p.image_urls?.[0],
     isNew: p.new_arrival === true,
     soldOut: p.status === 'Out of Stock',
+    sizes: p.sizes ?? [],
   }
 }
 
@@ -102,7 +104,7 @@ export function ProductGrid({ segment, newArrivalOnly }: ProductGridProps = {}) 
         </select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {cardProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

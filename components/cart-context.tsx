@@ -17,6 +17,8 @@ export interface CartItem {
   quantity: number
   size: string
   color: string
+  /** Per-line shipping cost (from product or default). Used for order totals. */
+  shipping_cost?: number | null
   /** Product image URL for cart/checkout display */
   image?: string
 }
@@ -84,6 +86,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             size: it.size,
             color: it.color,
             quantity: it.quantity,
+            shipping_cost: it.shipping_cost ?? undefined,
           })
         }
       }
@@ -115,6 +118,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             size: newItem.size,
             color: newItem.color,
             quantity: qty,
+            shipping_cost: (newItem as CartItem).shipping_cost ?? undefined,
           }).catch(() => {})
         }
         return next
@@ -127,6 +131,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           size: newItem.size,
           color: newItem.color,
           quantity: qty,
+          shipping_cost: (newItem as CartItem).shipping_cost ?? undefined,
         }).catch(() => {})
       }
       return [...prev, { ...newItem, quantity: qty }]
