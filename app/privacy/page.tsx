@@ -69,6 +69,24 @@ export default function PrivacyPage() {
             </p>
 
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-primary mt-10 mb-4">
+              Advertising and Third-Party Cookies
+            </h2>
+            <p className="text-foreground/90 mb-4">
+              We use Google AdSense to display advertisements on our website. Google uses advertising cookies to help serve ads on our site and on other websites. These cookies enable Google and its partners to serve ads based on your visits to our site and other sites on the internet.
+            </p>
+            <p className="text-foreground/90 mb-4">
+              Third-party vendors, including Google, use cookies to serve ads based on your prior visits to our website or other websites. You may opt out of personalized advertising by visiting{' '}
+              <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                Google&apos;s Ads Settings
+              </a>
+              . You can also opt out of third-party vendor use of cookies for personalized advertising by visiting{' '}
+              <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                www.aboutads.info
+              </a>
+              .
+            </p>
+
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-primary mt-10 mb-4">
               Sharing Your Information
             </h2>
             <p className="text-foreground/90 mb-4">
@@ -76,6 +94,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc pl-6 space-y-2 text-foreground/90 mb-8">
               <li>Service providers who help us operate our business (e.g. payment processors, shipping carriers)</li>
+              <li>Advertising partners (e.g. Google) to serve ads and measure ad performance</li>
               <li>Legal or regulatory authorities when required by law</li>
             </ul>
 

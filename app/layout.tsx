@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import Script from 'next/script'
 import { Playfair_Display, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProviderWithDrawer } from '@/components/cart-provider-with-drawer'
 import { CustomerAuthProvider } from '@/components/customer-auth-context'
+import { CookieConsent } from '@/components/cookie-consent'
 import { BASE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/lib/site'
 import './globals.css'
 
@@ -83,11 +83,7 @@ export default function RootLayout({
           </CartProviderWithDrawer>
         </CustomerAuthProvider>
         <Analytics />
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7938979901855907"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
+        <CookieConsent />
       </body>
     </html>
   )
