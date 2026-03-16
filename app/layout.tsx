@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { Playfair_Display, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProviderWithDrawer } from '@/components/cart-provider-with-drawer'
@@ -63,6 +64,9 @@ export const metadata: Metadata = {
     apple: '/falcon-new.png',
   },
   alternates: { canonical: BASE_URL ?? '/' },
+  other: {
+    'google-adsense-account': 'ca-pub-7938979901855907',
+  },
 }
 
 export default function RootLayout({
@@ -79,6 +83,11 @@ export default function RootLayout({
           </CartProviderWithDrawer>
         </CustomerAuthProvider>
         <Analytics />
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7938979901855907"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
       </body>
     </html>
   )
