@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  other: {
+    'google-adsense-account': 'ca-pub-7938979901855907',
+  },
   keywords: ['clothing', 'fashion', 'premium', 'apparel', 'luxury', 'Bixlay', 'Sri Lanka', 'men', 'women', 'new arrivals'],
   authors: [{ name: SITE_NAME, url: BASE_URL ?? '/' }],
   creator: SITE_NAME,
